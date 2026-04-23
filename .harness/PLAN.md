@@ -32,7 +32,7 @@ On a fresh Mac, `./setup.sh` leaves the user with every preferred AI tool instal
 ### 1. Scaffold the setup-scripts layout
 - **What:** Create the directory layout and empty entry points: `configs/` (captured app configs), `scripts/` (per-concern install scripts — brew, claude-cli, gui-apps, link-configs, auth-checklist), `setup.sh` (top-level orchestrator, stub only), and a `README.md` describing usage.
 - **Verification:** `bash setup.sh --help` exits 0 and prints a usage banner listing the stages. `tree -L 2 .` shows `configs/`, `scripts/`, `setup.sh`, `README.md`. `.harness/verify.sh setup.sh` passes.
-- **Status:** [ ]
+- **Status:** [x]
 
 ### 2. Capture current machine configs into `configs/`
 - **What:** Copy the literal config files from the current machine into the repo under `configs/`, stripping secrets. Targets: `configs/claude/settings.json`, `configs/claude/CLAUDE.md`, `configs/claude-desktop/claude_desktop_config.json`, `configs/gemini/settings.json`, `configs/antigravity/argv.json`, `configs/zsh/.zshrc-additions` (PATH exports only, not a full shell replacement), `configs/git/.gitconfig` (user.name + user.email only). Write a small `scripts/capture.sh` that can re-run this capture so the repo stays in sync as configs evolve.
