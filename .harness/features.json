@@ -1,4 +1,20 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "features": []
+  "features": [
+    {
+      "id": "feat-mac-one-shot-setup",
+      "description": "Single-command bootstrap for a fresh Mac: installs Antigravity, Gemini Desktop, Claude Desktop, Claude Code CLI, antigravity CLI, gemini CLI, supporting Homebrew tooling, and places captured config files.",
+      "steps": [
+        "scaffold configs/ scripts/ and setup.sh orchestrator",
+        "capture current-machine configs into configs/ with secret-stripping",
+        "install Homebrew formulae (node, gh, jq, ripgrep, shellcheck, shfmt, gemini-cli)",
+        "install Claude Code CLI via Anthropic's curl installer",
+        "install GUI apps from official DMGs (Antigravity, Gemini, Claude)",
+        "link captured configs into OS locations with backup of pre-existing files",
+        "orchestrator wires stages with --dry-run / --skip-apps / --only flags",
+        "print post-setup auth checklist"
+      ],
+      "passes": false
+    }
+  ]
 }

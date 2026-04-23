@@ -3,16 +3,16 @@
 # Called by the Claude Code PostToolUse hook after every Write|Edit with the
 # path of the file that was just written or edited as $1.
 #
-# Customize the case statement below to match your project's typecheck/lint.
-# Leave commands commented until you know you want them — a noisy hook is
-# worse than no hook.
+# dev-machine-setup is a shell-and-config repo, so we lint the file types we
+# actually edit: shell, PowerShell, and JSON. Each check is single-file and
+# fast. Optional linters (shellcheck, pwsh) are used when present and
+# silently skipped when not — verify.sh must not fail just because a dev
+# hasn't installed the optional tool yet.
 #
 # RULES:
-# - This runs on EVERY Write/Edit. Keep it FAST (<2s total). Full-suite tests
-#   belong in /review or CI, not here.
-# - Prefer single-file operations (lint one file, not the whole project).
-# - Exit 0 on success (silent), non-zero on failure (shown as system message).
-# - Stdout/stderr are shown to the user, so keep output minimal on success.
+# - This runs on EVERY Write/Edit. Keep it FAST (<2s total).
+# - Prefer single-file operations.
+# - Exit 0 on success (silent), non-zero on failure.
 
 set -uo pipefail
 
@@ -21,30 +21,26 @@ FILE="${1:-}"
 [[ ! -f "$FILE" ]] && exit 0
 
 case "$FILE" in
-  # TypeScript — typecheck single file
-  # *.ts|*.tsx)
-  #   npx tsc --noEmit "$FILE" 2>&1 || exit 1
-  #   ;;
+  *.sh)
+    bash -n "$FILE" || exit 1
+    if command -v shellcheck >/dev/null 2>&1; then
+      shellcheck -x "$FILE" || exit 1
+    fi
+    ;;
 
-  # JavaScript — lint single file
-  # *.js|*.jsx|*.mjs|*.cjs)
-  #   npx eslint --no-error-on-unmatched-pattern "$FILE" 2>&1 || exit 1
-  #   ;;
+  *.ps1)
+    if command -v pwsh >/dev/null 2>&1; then
+      pwsh -NoProfile -Command "
+        \$null = [System.Management.Automation.Language.Parser]::ParseFile(
+          '$FILE', [ref]\$null, [ref]\$errors)
+        if (\$errors) { \$errors | ForEach-Object { Write-Error \$_ }; exit 1 }
+      " || exit 1
+    fi
+    ;;
 
-  # Python — lint with ruff (fast) or flake8
-  # *.py)
-  #   ruff check "$FILE" 2>&1 || exit 1
-  #   ;;
-
-  # Go — vet the containing package
-  # *.go)
-  #   go vet "./$(dirname "$FILE")/..." 2>&1 || exit 1
-  #   ;;
-
-  # Rust — check (fast; no codegen)
-  # *.rs)
-  #   cargo check --quiet 2>&1 || exit 1
-  #   ;;
+  *.json)
+    jq empty "$FILE" || exit 1
+    ;;
 esac
 
 exit 0
