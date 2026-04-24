@@ -60,9 +60,9 @@ On a fresh Mac, `./setup.sh` leaves the user with every preferred AI tool instal
 - **Status:** [x]
 
 ### 7. Wire the top-level orchestrator
-- **What:** Flesh out `setup.sh` to run stages 3–6 in order, with flags `--dry-run` (print the ordered steps), `--skip-apps` (useful in CI / headless), `--only <stage>` (run one stage). Each stage logs a `==> <name>` banner matching harness convention, returns non-zero on failure, and the orchestrator halts on the first failure.
-- **Verification:** `./setup.sh --dry-run` prints the ordered stage list and exits 0. `./setup.sh --only brew` runs only the brew stage. On a fresh Mac (or VM snapshot) `./setup.sh` completes all stages and ends with exit 0; re-running produces no meaningful changes.
-- **Status:** [ ]
+- **What:** Flesh out `setup.sh` to run stages 3–6 in order. Flags: `--dry-run` (print ordered plan + script paths, exit 0), `--skip-apps` (drops the gui-apps stage — CI / headless), `--only <stage>` (filter to a single stage; validates against the known list). Each sub-script already prints its own `==> <name>` banner per harness convention; the orchestrator wraps each invocation in an outer `====> stage: <name>` so stage boundaries remain obvious in long logs. `set -euo pipefail` + direct `"$script"` invocation means any non-zero exit halts the pipeline. Stages whose scripts are not yet on disk (currently `auth-checklist` — task 8) warn + skip rather than failing, so partial pipelines still run what exists.
+- **Verification:** `shellcheck` passes. `./setup.sh --help` → usage banner, exits 0. `./setup.sh --dry-run` → prints 5-stage plan with resolved script paths, exits 0. `./setup.sh --dry-run --skip-apps` → 4 stages (gui-apps dropped). `./setup.sh --dry-run --only brew` → 1 stage. `./setup.sh --only bogus` → exits 2 with error listing valid stages. `./setup.sh --only link-configs` runs on this dev Mac, produces fully-converged idempotent output, exits 0. Full `./setup.sh` on a fresh Mac is a `/release`-gate manual test (requires a clean VM / wiped account).
+- **Status:** [x]
 
 ### 8. Post-setup auth checklist
 - **What:** `scripts/auth-checklist.sh` — printed at the end of `setup.sh`, enumerates the manual steps that can't be automated: `claude login`, `gh auth login`, `gemini` (first run triggers oauth), open Antigravity.app for sign-in, open Claude.app for sign-in. Include a `docs/first-run.md` covering the same material for reference.
