@@ -50,9 +50,9 @@ On a fresh Mac, `./setup.sh` leaves the user with every preferred AI tool instal
 - **Status:** [x]
 
 ### 5. Write the GUI-apps install script
-- **What:** `scripts/install-gui-apps.sh` — downloads the official DMG/installer for Antigravity, Gemini Desktop, and Claude Desktop; mounts, copies to `/Applications`, unmounts, removes quarantine xattr. Skip-if-exists for each app. Installer URLs live in a top-of-file table so they're easy to update when versions change.
-- **Verification:** After running on a machine without the apps, `/Applications/Antigravity.app`, `/Applications/Gemini.app`, `/Applications/Claude.app` all exist and are launchable (`open -na <App>` succeeds). Re-run on an installed machine makes no network calls for apps already present.
-- **Status:** [ ]
+- **What:** `scripts/install-gui-apps.sh` — **browser-assisted installer** (curl-direct download was investigated and abandoned: Claude's canonical DMG redirect sits behind a Cloudflare JS challenge that returns 403 to curl regardless of User-Agent, and Antigravity + Gemini Desktop have no discoverable direct-DMG URL). For each app, if `/Applications/<App>.app` is absent, the script `open`s the vendor's download page in the default browser and polls until the user has dragged the `.app` into `/Applications`, then strips Gatekeeper quarantine with `xattr -rc`. Skip-if-exists per app — fully no-op on an already-configured machine. URLs live in a top-of-file parallel-array table for one-line updates.
+- **Verification:** Skip-if-exists path + post-check verified on this dev Mac (all three apps present — script runs silent and exits 0). `shellcheck` passes. Interactive download path can only be verified on a fresh Mac and is a `/release`-gate manual step, not a per-task gate. Non-interactive invocations (no TTY on stdin) fail fast with a pointer to `setup.sh --skip-apps` rather than hanging on `read`.
+- **Status:** [x]
 
 ### 6. Write the config-link script
 - **What:** `scripts/link-configs.sh` — places the captured configs at their real OS locations. Prefer symlinks back into the repo so edits on either side stay in sync (`~/.claude/settings.json` → `$REPO/configs/claude/settings.json`). For tools known to rewrite their file in place (TBD — investigate Claude Code's behavior during `/work`), fall back to copy with a content-hash guard. Back up any pre-existing file to `~/.dev-machine-setup-backup/<timestamp>/` before linking.
