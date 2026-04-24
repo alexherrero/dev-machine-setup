@@ -1,10 +1,12 @@
-# dev-machine-setup
+# dev-machine-setup <img src="https://img.shields.io/badge/Claude-D97757?logo=claude&logoColor=white&style=flat-square" alt="Claude" align="right"> <img src="https://img.shields.io/badge/Gemini-4285F4?logo=googlegemini&logoColor=white&style=flat-square" alt="Gemini" align="right"> <img src="https://img.shields.io/badge/Antigravity-1A73E8?logo=google&logoColor=white&style=flat-square" alt="Antigravity" align="right">
 
 Opinionated one-shot bootstrap for a Mac dev environment built around AI
 coding tools (Antigravity, Gemini Desktop, Claude Desktop, and their
 respective CLIs) plus a minimal Homebrew toolchain. Configuration lives
 as literal files in `configs/` so the setup is diffable, auditable, and
 portable.
+
+---
 
 ## Usage
 
