@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.1.0] — 2026-04-23
+
+### Added
+- `setup.sh` orchestrator — runs install stages in order with `--dry-run`, `--skip-apps`, `--only <stage>`, and `--help`. Missing stage scripts warn+skip (supports in-progress plans); `set -euo pipefail` + direct invocation halts on first real failure.
+- `scripts/link-configs.sh` — places captured configs at OS locations via four per-file strategies: symlink for user-authored files (`CLAUDE.md` only); copy-if-absent for app-owned JSON (Claude Code and Claude Desktop both confirmed to rewrite in place); append-idempotent under a marker for `~/.zshrc`; `git config --global` merge for `user.name`/`user.email` (preserves existing includes, credential helpers, signing config). Pre-existing files move to `~/.dev-machine-setup-backup/<utc>/`; backup dir is lazy-created so converged reruns leave no trace. JSONC-aware validation for `argv.json`.
+- `scripts/auth-checklist.sh` + `docs/first-run.md` — post-setup checklist of the 5 manual steps (`claude login`, `gh auth login`, `gemini` first-run oauth, Antigravity sign-in, Claude Desktop sign-in) + a doc that traces each command to the install stage that provisioned it.
+- `setup.ps1` + `scripts/install-*.ps1` + `docs/windows.md` — Windows orchestrator skeleton matching the Mac flag shape, five per-stage stubs, and a deferral doc with per-stage remaining-work table. AST validation deferred to a Windows reference VM.
+
+### Changed
+- First release using conventional-commit `feat:` prefixes so the `ship-release` skill classifies feature drops as **minor** bumps (v0.0.5 → v0.1.0) instead of defaulting to **patch**. Calibration applied mid-session; prior v0.0.1–v0.0.5 releases used `setup:` prefixes that fell through the classifier.
+
 ## [v0.0.5] — 2026-04-23
 
 ### Added
@@ -44,6 +55,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - Initial project scaffold: bootstrapped with [agentic-harness](https://github.com/alexherrero/agentic-harness) v0.8.7 + hooks. Includes adapters for Claude Code, Antigravity, Codex, and Gemini plus `PostToolUse` / `PreCompact` / `SessionStart(compact)` hooks.
 
+[v0.1.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.1.0
 [v0.0.5]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.0.5
 [v0.0.4]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.0.4
 [v0.0.3]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.0.3
