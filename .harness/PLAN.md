@@ -65,9 +65,9 @@ On a fresh Mac, `./setup.sh` leaves the user with every preferred AI tool instal
 - **Status:** [x]
 
 ### 8. Post-setup auth checklist
-- **What:** `scripts/auth-checklist.sh` — printed at the end of `setup.sh`, enumerates the manual steps that can't be automated: `claude login`, `gh auth login`, `gemini` (first run triggers oauth), open Antigravity.app for sign-in, open Claude.app for sign-in. Include a `docs/first-run.md` covering the same material for reference.
-- **Verification:** `scripts/auth-checklist.sh` exits 0 and prints at least the five items above. `docs/first-run.md` exists and every listed command is one the preceding install stages actually provisioned.
-- **Status:** [ ]
+- **What:** `scripts/auth-checklist.sh` — numbered, informational output enumerating the five manual steps that can't be scripted: `claude login`, `gh auth login`, `gemini` (first run triggers Google oauth — no `login` subcommand), `open -a Antigravity`, `open -a Claude`. Always exits 0 (informational, not a gate). `docs/first-run.md` covers the same five steps with extra context: which install stage provisioned each tool, where each tool's state lands on disk, and what `setup.sh` leaves behind (symlinks, seeded configs, zshrc marker block, gitconfig merge, backup dir).
+- **Verification:** `shellcheck` passes on `scripts/auth-checklist.sh`. Script exits 0 and prints all five items. `./setup.sh --only auth-checklist` runs the stage via the orchestrator (no longer warn-skipped since the file now exists). `docs/first-run.md` exists and every listed command is one that an earlier install stage actually provisions: `claude` / `gemini` from `install-clis.sh`, `gh` from `install-brew.sh`, Antigravity.app / Claude.app from `install-gui-apps.sh`.
+- **Status:** [x]
 
 ### 9. Windows stubs
 - **What:** `setup.ps1` and `scripts/install-*.ps1` skeletons with the same stage banners but bodies that print `TODO: implement on Windows reference VM` and exit 0. A `docs/windows.md` note describing the deferral. Ensures the repo's contract is cross-platform even if Mac is the only live implementation today.
