@@ -10,13 +10,25 @@ portable.
 
 ## Usage
 
-On a fresh Mac:
+### macOS / Linux
 
 ```bash
 git clone git@github.com:alexherrero/dev-machine-setup.git
 cd dev-machine-setup
-./setup.sh --help    # today: prints the stage list
-./setup.sh           # end-to-end bootstrap (lands in PLAN.md task 7)
+./setup.sh --help    # prints the stage list
+./setup.sh           # end-to-end bootstrap
+source ~/.zshrc      # refresh PATH so newly-installed CLIs resolve in this shell
+```
+
+### Windows
+
+```powershell
+git clone git@github.com:alexherrero/dev-machine-setup.git
+cd dev-machine-setup
+./setup.ps1 -Help    # prints the stage list
+./setup.ps1          # end-to-end bootstrap (currently a stub — see docs/windows.md)
+# Refresh PATH in the current session so new tools resolve:
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 ```
 
 The orchestrator runs each stage in order and stops on the first
