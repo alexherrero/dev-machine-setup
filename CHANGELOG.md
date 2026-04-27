@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.0] — 2026-04-27
+
+### Added
+- `scripts/verify-install.sh` + Windows stub — warn-only post-setup health check that runs after `link-configs` and before `auth-checklist`. Two tiers: **global** (PATH binaries, GUI app bundles, captured-config validity, `~/.zshrc` PATH marker, `claude`/`gemini --version` smoke tests, the `includeCoAuthoredBy` kill-switch, global agents/skills dirs); **harness** (only when CWD has `.harness/` — verifies PLAN.md / progress.md / features.json, `.harness/verify.sh` is executable, project `.claude/{agents,skills,commands}` populated, `PostToolUse` hook references `.harness/verify.sh`). Each check prints `[ OK ]` / `[WARN]` / `[SKIP]`; always exits 0 so the bootstrap never halts on an advisory failure. Manual auth steps stay in `auth-checklist.sh` since they can't be machine-verified.
+- `configs/claude/CLAUDE.md` — global Claude Code instruction telling Claude not to append `Co-Authored-By: Claude …` trailers to commits. Symlinked into `~/.claude/CLAUDE.md` by `link-configs.sh`, so every fresh Mac inherits the rule. History on this repo (and on `agentic-harness` and `sherwood`) was retroactively scrubbed.
+
+### Changed
+- `configs/claude/settings.json` + project `.claude/settings.json` set `includeCoAuthoredBy: false` — the canonical Claude Code kill-switch for the trailer. Belt-and-braces alongside the CLAUDE.md instruction.
+- README: Claude / Gemini / Antigravity badges next to the title; Usage section split into `macOS / Linux` and `Windows` subsections with refresh-PATH commands for both shells.
+
 ## [v0.1.0] — 2026-04-23
 
 ### Added
@@ -55,6 +65,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - Initial project scaffold: bootstrapped with [agentic-harness](https://github.com/alexherrero/agentic-harness) v0.8.7 + hooks. Includes adapters for Claude Code, Antigravity, Codex, and Gemini plus `PostToolUse` / `PreCompact` / `SessionStart(compact)` hooks.
 
+[v0.2.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.2.0
 [v0.1.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.1.0
 [v0.0.5]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.0.5
 [v0.0.4]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.0.4
