@@ -20,3 +20,10 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - The session was compacted at this point. To re-anchor on the
   in-flight task, read .harness/PLAN.md and the entries above
   this marker. The compaction summary alone is not enough.
+
+## compaction event — 2026-04-24T22:17:17Z
+- trigger: auto
+- branch: main
+- The session was compacted at this point. To re-anchor on the
+  in-flight task, read .harness/PLAN.md and the entries above
+  this marker. The compaction summary alone is not enough.

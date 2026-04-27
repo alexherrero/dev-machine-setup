@@ -21,6 +21,7 @@ $Stages = @(
   [pscustomobject]@{ Name = 'clis';           Script = 'install-clis.ps1';       Desc = 'Install Claude Code CLI + Gemini CLI' }
   [pscustomobject]@{ Name = 'gui-apps';       Script = 'install-gui-apps.ps1';   Desc = 'Install Antigravity, Gemini Desktop, Claude Desktop' }
   [pscustomobject]@{ Name = 'link-configs';   Script = 'link-configs.ps1';       Desc = 'Place captured configs into their OS locations' }
+  [pscustomobject]@{ Name = 'verify-install'; Script = 'verify-install.ps1';     Desc = 'Health-check the install (warn-only — tools, configs, agents, skills)' }
   [pscustomobject]@{ Name = 'auth-checklist'; Script = 'auth-checklist.ps1';     Desc = 'Print the manual auth steps' }
 )
 

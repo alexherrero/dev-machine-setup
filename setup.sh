@@ -17,12 +17,13 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Parallel arrays — bash 3.2 compat (no associative arrays on macOS's
 # system bash). Indexes line up across the three.
 
-STAGE_NAMES=(brew clis gui-apps link-configs auth-checklist)
+STAGE_NAMES=(brew clis gui-apps link-configs verify-install auth-checklist)
 STAGE_SCRIPTS=(
   "$REPO_ROOT/scripts/install-brew.sh"
   "$REPO_ROOT/scripts/install-clis.sh"
   "$REPO_ROOT/scripts/install-gui-apps.sh"
   "$REPO_ROOT/scripts/link-configs.sh"
+  "$REPO_ROOT/scripts/verify-install.sh"
   "$REPO_ROOT/scripts/auth-checklist.sh"
 )
 STAGE_DESCS=(
@@ -30,6 +31,7 @@ STAGE_DESCS=(
   "Install Claude Code CLI (curl) + Gemini CLI (npm global)"
   "Install Antigravity, Gemini Desktop, Claude Desktop (browser-assisted)"
   "Place captured configs from configs/ into their OS locations"
+  "Health-check the install (warn-only — tools, configs, agents, skills)"
   "Print the manual auth steps (claude login, gh auth login, etc.)"
 )
 
