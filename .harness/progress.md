@@ -38,3 +38,8 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - scripts/lib/os.sh: OS detection helper (macos|debian|exit 2). External $OS override path validates against allowed values.
 - setup.sh: sources os.sh, builds per-OS STAGE_* arrays. Mac: 6 stages unchanged. Debian: 5 stages (apt instead of brew, no gui-apps).
 - Verified: shellcheck clean; Mac auto-detect works; OS=debian forced works; OS=plan9 exits 2; --only validates per-OS list.
+
+## /work — feat-debian-cli-support task 2 — 2026-04-27
+- scripts/install-apt.sh: NodeSource (node 22 LTS) + GitHub CLI apt repos with explicit keyrings, apt-installs nodejs/gh/jq/ripgrep/shellcheck/shfmt, shfmt fallback to GitHub release binary on older distros (Debian 11, Ubuntu 22.04).
+- Idempotent: keyring + sources.list writes guarded by file-exists checks. Defensive Mac guard exits 2 before any sudo if OS != debian.
+- Verified: shellcheck -x clean, bash -n clean, Mac guard fires correctly, setup.sh dispatch resolves install-apt.sh as the apt stage on Debian. Runtime VM verification deferred to /release.
