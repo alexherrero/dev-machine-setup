@@ -60,3 +60,7 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - scripts/install-clis.sh: uses shared rc_file() instead of local copy.
 - scripts/link-configs.sh: sources os.sh; Claude Desktop block gated on OS==macos; append_zshrc_additions renamed to append_shell_additions and routes via rc_file(); post-check JSON list excludes ~/Library/... on Debian.
 - Verified: Mac re-run no-op; OS=debian forced run skips Mac-only path correctly and validates 3 JSONs; rc_file() correct across debian/zsh, debian/bash, macos.
+
+## /work — feat-debian-cli-support task 5 — 2026-04-28
+- scripts/verify-install.sh: sources os.sh; brew Mac-only; GUI-apps + Library JSON consolidated to one OS==macos block (single SKIP on Debian); codex PATH+version conditional on WITH_CODEX (SKIP with hint when off); check_rc_marker replaces check_zshrc_marker via shared rc_file().
+- Verified: Mac default 30 ok / 0 warn (baseline preserved); Mac WITH_CODEX=1 30 ok / 1 warn (correct — codex not installed since task 3 amendment); OS=debian forced 25 ok / 0 warn (lost: brew + 3 apps + Library JSON = 5 entries).

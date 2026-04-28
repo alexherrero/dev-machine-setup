@@ -5,10 +5,12 @@
 # regardless. Surfaces what's missing without halting an in-progress
 # bootstrap. Two tiers:
 #
-#   global    — runs always. Tooling on PATH, GUI apps in /Applications,
-#               captured configs at their OS locations, ~/.zshrc PATH
-#               marker, CLI smoke-tests (claude --version, gemini --version),
-#               global Claude sub-agents/skills directories.
+#   global    — runs always. Tooling on PATH, captured configs at their
+#               OS locations, rc-file PATH marker, CLI smoke-tests
+#               (claude / gemini / codex-if-WITH_CODEX), global Claude
+#               sub-agents/skills directories. On Mac also checks
+#               /Applications/*.app + the Mac-only Claude Desktop config;
+#               on Debian those skip with one [SKIP] line each.
 #
 #   harness   — runs only when the current working dir contains .harness/
 #               (i.e. you're sitting inside an agentic-harness project).
@@ -20,6 +22,15 @@
 # from a script and stay in auth-checklist.sh.
 
 set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=scripts/lib/os.sh
+. "$REPO_ROOT/scripts/lib/os.sh"
+
+# Codex install is opt-in via WITH_CODEX (matches install-clis.sh's gate).
+# Default off — when off, the codex PATH + version checks are SKIPped, not
+# WARNed, since the user never asked for codex to be installed.
+WITH_CODEX="${WITH_CODEX:-0}"
 
 PASS=0
 WARN=0
@@ -87,8 +98,12 @@ check_symlink_into_repo() {
   fi
 }
 
-check_zshrc_marker() {
-  local rc="$HOME/.zshrc"
+check_rc_marker() {
+  # Use the same rc_file() helper that link-configs.sh uses for writing,
+  # so the check matches the file we actually wrote. ~/.zshrc on Mac and
+  # Debian-with-zsh; ~/.bashrc on Debian-with-bash.
+  local rc
+  rc="$(rc_file)"
   local marker='# dev-machine-setup PATH additions (link-configs.sh)'
   if [[ ! -f "$rc" ]]; then
     warn "$rc missing"
@@ -157,45 +172,70 @@ check_co_authored_by() {
 
 # --- global tier ------------------------------------------------------------
 
-echo "==> verify-install (global tier)"
+echo "==> verify-install (global tier — OS=$OS)"
 
-# PATH binaries — the toolchain installed by install-brew.sh + install-clis.sh.
-for entry in \
-  "brew|Homebrew" \
-  "node|Node" \
-  "gh|GitHub CLI" \
-  "jq|jq" \
-  "rg|ripgrep" \
-  "shellcheck|shellcheck" \
-  "shfmt|shfmt" \
-  "claude|Claude Code CLI" \
-  "gemini|Gemini CLI"; do
+# PATH binaries. The package-manager binary is platform-specific (brew on
+# Mac, apt is always present on Debian and uninteresting to check). Codex
+# is opt-in — only checked when WITH_CODEX=1.
+bins=()
+if [[ "$OS" == "macos" ]]; then
+  bins+=("brew|Homebrew")
+fi
+bins+=(
+  "node|Node"
+  "gh|GitHub CLI"
+  "jq|jq"
+  "rg|ripgrep"
+  "shellcheck|shellcheck"
+  "shfmt|shfmt"
+  "claude|Claude Code CLI"
+  "gemini|Gemini CLI"
+)
+if [[ "$WITH_CODEX" == "1" ]]; then
+  bins+=("codex|Codex CLI")
+fi
+for entry in "${bins[@]}"; do
   bin="${entry%%|*}"
   desc="${entry##*|}"
   check_bin "$bin" "$desc"
 done
+if [[ "$WITH_CODEX" != "1" ]]; then
+  skip "codex on PATH (set WITH_CODEX=1 to include Codex CLI)"
+fi
 
-# GUI apps installed by install-gui-apps.sh.
-check_app "Antigravity.app"
-check_app "Gemini.app"
-check_app "Claude.app"
+# GUI apps + Claude Desktop config — Mac-only. CLI-only Debian scope means
+# Antigravity / Gemini Desktop / Claude Desktop aren't installed; the
+# claude_desktop_config.json path is also never written by link-configs.sh.
+if [[ "$OS" == "macos" ]]; then
+  check_app "Antigravity.app"
+  check_app "Gemini.app"
+  check_app "Claude.app"
+  check_json "$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+else
+  skip "/Applications/*.app + Claude Desktop config (Linux: CLI-only scope)"
+fi
 
-# Captured configs placed by link-configs.sh.
+# Captured configs placed by link-configs.sh (cross-platform paths).
 check_symlink_into_repo "$HOME/.claude/CLAUDE.md" "configs/claude/CLAUDE.md"
 check_json  "$HOME/.claude/settings.json"
-check_json  "$HOME/Library/Application Support/Claude/claude_desktop_config.json"
 check_json  "$HOME/.gemini/settings.json"
 check_jsonc "$HOME/.antigravity/argv.json"
 
 # Co-Authored-By kill-switch in global Claude Code settings.
 check_co_authored_by "$HOME/.claude/settings.json"
 
-# zshrc PATH marker (so claude/gemini etc. resolve in fresh shells).
-check_zshrc_marker
+# rc-file PATH marker. Picks ~/.zshrc on Mac and Debian-with-zsh,
+# ~/.bashrc on Debian-with-bash — the same file link-configs.sh wrote to.
+check_rc_marker
 
 # CLI smoke tests — confirm the binary actually runs, not just lives on PATH.
 check_cli_version claude
 check_cli_version gemini
+if [[ "$WITH_CODEX" == "1" ]]; then
+  check_cli_version codex
+else
+  skip "codex --version (set WITH_CODEX=1 to include Codex CLI)"
+fi
 
 # Global Claude Code agents/skills dirs. These are user-discretionary —
 # absence is expected when the user hasn't installed any. Report informationally.
