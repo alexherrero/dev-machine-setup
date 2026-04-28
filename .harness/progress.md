@@ -48,3 +48,9 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - scripts/install-clis.sh: cross-platform (sources os.sh), per-OS rc_file() picker, Debian npm-prefix at ~/.npm-global, Node ≥ 20 guard on Debian, Codex CLI added as third install (@openai/codex).
 - Live run on Mac: claude 2.1.112 + gemini 0.39.1 + codex 0.125.0 (new). Idempotent re-run preserves PATH markers.
 - Verified: shellcheck -x clean; rc_file() correct on debian/zsh, debian/bash, mac; harness verify.sh ok.
+
+## /work — feat-debian-cli-support task 3 amendment — 2026-04-27
+- Codex re-scoped from always-installed to opt-in via --with-codex flag (WITH_CODEX=1).
+- setup.sh: --with-codex flag added; exports WITH_CODEX to env. install-clis.sh: Codex install + post-check entry both gated.
+- Codex uninstalled from this Mac. Default run skips Codex with informative banner; post-check verifies only claude+gemini.
+- Tasks 5 (verify-install) and 6 (auth-checklist) updated to honor the same flag conditionally.

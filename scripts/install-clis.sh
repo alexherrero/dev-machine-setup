@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
-# install-clis.sh — install the three CLI agents we use:
+# install-clis.sh — install the CLI agents we use:
 #   - Claude Code CLI  (Anthropic's curl installer  → ~/.local/bin/claude)
 #   - Gemini CLI       (npm global, @google/gemini-cli)
-#   - Codex CLI        (npm global, @openai/codex)
+#   - Codex CLI        (npm global, @openai/codex) — OPT-IN via WITH_CODEX=1
 #
 # Cross-platform. Requires node + npm on PATH from install-brew.sh (Mac)
 # or install-apt.sh (Debian). Idempotent: re-running pulls each tool's
 # latest stable (no-op if already current).
+#
+# Codex is opt-in. By default this script installs Claude + Gemini only.
+# Pass --with-codex to setup.sh (which exports WITH_CODEX=1), or set the
+# env var directly: `WITH_CODEX=1 ./scripts/install-clis.sh`. The reasoning
+# is that not every user wants the extra dependency / login flow; making
+# it explicit keeps the default install minimal.
 #
 # PATH handling per platform:
 #   macOS  : ~/.local/bin marker appended to ~/.zshrc (captured shell).
@@ -152,19 +158,29 @@ fi
 # "up to date" when already latest.
 npm install -g "$GEMINI_NPM_PACKAGE"
 
-# --- 4. Codex CLI -----------------------------------------------------------
+# --- 4. Codex CLI (opt-in via WITH_CODEX=1) ---------------------------------
 
-echo "==> Codex CLI ($CODEX_NPM_PACKAGE)"
-if command -v codex >/dev/null 2>&1; then
-  echo "    currently: $(codex --version 2>&1 | head -1)"
+WITH_CODEX="${WITH_CODEX:-0}"
+if [[ "$WITH_CODEX" == "1" ]]; then
+  echo "==> Codex CLI ($CODEX_NPM_PACKAGE)"
+  if command -v codex >/dev/null 2>&1; then
+    echo "    currently: $(codex --version 2>&1 | head -1)"
+  fi
+  npm install -g "$CODEX_NPM_PACKAGE"
+else
+  echo "==> Codex CLI: skipped (pass --with-codex to setup.sh to include)"
 fi
-npm install -g "$CODEX_NPM_PACKAGE"
 
 # --- 5. Post-check ----------------------------------------------------------
 
 echo "==> verifying"
+# Build the expected-binaries list dynamically so we don't fail-mark `codex`
+# missing when it was never asked to be installed.
+expected=(claude gemini)
+[[ "$WITH_CODEX" == "1" ]] && expected+=(codex)
+
 missing=()
-for bin in claude gemini codex; do
+for bin in "${expected[@]}"; do
   if command -v "$bin" >/dev/null 2>&1; then
     version=$("$bin" --version 2>&1 | head -1)
     printf '    %-8s %-40s %s\n' "$bin" "$(command -v "$bin")" "$version"

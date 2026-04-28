@@ -80,6 +80,8 @@ Options:
   --dry-run           Print the ordered stage list and exit (no scripts run)
   --skip-apps         Skip the gui-apps stage (no-op on Debian — no GUI stage)
   --only <stage>      Run only the named stage
+  --with-codex        Also install Codex CLI (@openai/codex). Off by default.
+                      (Sets WITH_CODEX=1 for the install-clis stage.)
   -h, --help          Show this help
 
 Supported: macOS (Darwin), Debian/Ubuntu (Linux). Windows: see setup.ps1
@@ -92,12 +94,16 @@ EOF
 DRY_RUN=0
 SKIP_APPS=0
 ONLY=""
+# Per-CLI opt-in flags. Exported as env vars to the install-clis stage so
+# its own logic stays simple (no flag-parsing duplicated downstream).
+WITH_CODEX="${WITH_CODEX:-0}"
 
 while (($# > 0)); do
   case "$1" in
     -h|--help) usage; exit 0 ;;
     --dry-run) DRY_RUN=1 ;;
     --skip-apps) SKIP_APPS=1 ;;
+    --with-codex) WITH_CODEX=1 ;;
     --only)
       [[ $# -lt 2 ]] && { echo "Error: --only requires a stage name" >&2; exit 2; }
       ONLY="$2"
@@ -112,6 +118,8 @@ while (($# > 0)); do
   esac
   shift
 done
+
+export WITH_CODEX
 
 # --- validate --only target -------------------------------------------------
 
