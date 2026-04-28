@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.6.0] — 2026-04-28
+
+> **First Debian-runnable release.** Tasks 1–7 of 8 done for `feat-debian-cli-support`. The Mac path is unchanged and stable. The Debian path is now feature-complete end-to-end via static verification (forced `OS=debian` dispatch on Mac dev box across every stage) but **has not yet been exercised on a real Debian VM** — task 8 closes that out and flips `features.passes=true`. Treat v0.6.0 as "should work but unverified" on actual Debian/Ubuntu hosts. Mac users on v0.2.0+ are unaffected.
+
+### Changed
+- **`scripts/verify-install.sh`** is now cross-platform. `brew` is Mac-only; `/Applications/*.app` checks (Antigravity / Gemini / Claude) and the `~/Library/.../claude_desktop_config.json` JSON validity check are gated on `OS==macos` (one consolidated `[SKIP]` line on Debian). Codex PATH check + `--version` smoke test are gated on `WITH_CODEX==1` — when off, both emit `[SKIP] codex … (set WITH_CODEX=1 to include Codex CLI)` rather than a false-alarm WARN. `check_zshrc_marker` → `check_rc_marker` via shared `rc_file()` so Debian-with-bash inspects `~/.bashrc`. Banner shows `OS=$OS`. Mac default output is unchanged: 30 ok / 0 warn baseline preserved exactly.
+- **`scripts/auth-checklist.sh`** is now cross-platform. Steps built dynamically into a single array with auto-numbering. GUI sign-in steps (`open -a Antigravity`, `open -a Claude`) appended only when `OS==macos`. Codex `login` step (verified against `npx @openai/codex --help`, which exposes a `login` subcommand) appended only when `WITH_CODEX==1`; default-off prints a one-line "(Codex CLI step omitted — pass --with-codex to setup.sh to include it.)". Heading text differs per OS: Mac says "Installed tooling is in place"; Debian says "CLI install complete (no GUI apps on Debian — that's by design)" so the GUI omission on Linux is deliberate, not a bug. Banner shows `OS=$OS`.
+- **`docs/first-run.md`** rewritten with two subsections (`## Mac`, `## Debian / Ubuntu`); the optional Codex step documented in both; trailing "What `setup.sh` leaves behind" now flags platform-specific paths explicitly (Claude Desktop config Mac-only; `~/.bashrc` on Debian-with-bash; `~/.npm-global/bin` Debian-only).
+- **`README.md`** reframed for Mac (full GUI + CLI) or Debian / Ubuntu (CLI-only). Three platform subsections under Usage (`### macOS`, `### Debian / Ubuntu`, `### Windows`); both Mac and Debian show `--with-codex` as the opt-in install. Layout block expanded to show the per-script tree (`lib/os.sh`, `install-brew`/`install-apt` split, etc.). Status section: Mac ready / Debian ready / Windows deferred.
+
+### Added
+- **`docs/debian.md`** — supported-distro matrix (Debian 11/12/13 Bullseye/Bookworm/Trixie; Ubuntu 20.04/22.04/24.04 LTS) with per-release `shfmt`-source column (apt vs GitHub-release fallback); amd64 + arm64 both supported. Debian-flavored stage list, "What's omitted vs Mac" comparison, the explicit "Why Antigravity isn't supported on Linux" callout citing Google's own `antigravity.google/docs/command` docs (`agy` is a desktop-IDE launcher, not a headless agent), toolchain detail (NodeSource node 22 LTS, GitHub CLI apt repo, npm-globals-without-sudo via `~/.npm-global` prefix, shfmt fallback), and a future-work section.
+
+**Full diff:** https://github.com/alexherrero/dev-machine-setup/compare/v0.5.0...v0.6.0
+
 ## [v0.5.0] — 2026-04-27
 
 > ⚠️ **Mid-feature release.** Tasks 1–4 of 8 done for `feat-debian-cli-support`. Mac path is unchanged and stable. The Debian path now runs through `apt → clis → link-configs` cleanly — no Mac-flavored paths get written into the Linux home. `verify-install.sh` and `auth-checklist.sh` still have Mac-only assumptions (`/Applications/*.app` checks, GUI sign-in steps); end-to-end Debian readiness lands with task 7. Stay on **v0.2.0 for production Mac use** until this feature ships in full.
@@ -95,6 +110,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - Initial project scaffold: bootstrapped with [agentic-harness](https://github.com/alexherrero/agentic-harness) v0.8.7 + hooks. Includes adapters for Claude Code, Antigravity, Codex, and Gemini plus `PostToolUse` / `PreCompact` / `SessionStart(compact)` hooks.
 
+[v0.6.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.6.0
 [v0.5.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.5.0
 [v0.4.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.4.0
 [v0.3.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.3.0
