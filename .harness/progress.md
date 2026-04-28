@@ -64,3 +64,8 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 ## /work — feat-debian-cli-support task 5 — 2026-04-28
 - scripts/verify-install.sh: sources os.sh; brew Mac-only; GUI-apps + Library JSON consolidated to one OS==macos block (single SKIP on Debian); codex PATH+version conditional on WITH_CODEX (SKIP with hint when off); check_rc_marker replaces check_zshrc_marker via shared rc_file().
 - Verified: Mac default 30 ok / 0 warn (baseline preserved); Mac WITH_CODEX=1 30 ok / 1 warn (correct — codex not installed since task 3 amendment); OS=debian forced 25 ok / 0 warn (lost: brew + 3 apps + Library JSON = 5 entries).
+
+## /work — feat-debian-cli-support task 6 — 2026-04-28
+- scripts/auth-checklist.sh: sources os.sh; dynamic steps array; codex login conditional on WITH_CODEX=1; GUI sign-ins Mac-only; OS-specific heading text.
+- docs/first-run.md: rewritten with ## Mac (5/6 steps) and ## Debian / Ubuntu (3/4 steps) subsections; optional codex documented in both; trailing "What setup.sh leaves behind" updated for platform-specific paths.
+- Verified: 4 configurations all correct (Mac default 5 items, Mac+codex 6, Debian 3, Debian+codex 4). Linux output has no Antigravity/Claude Desktop refs. Codex first-run verified as `codex login` via npx.
