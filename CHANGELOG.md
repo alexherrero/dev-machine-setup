@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.4.0] — 2026-04-27
+
+> ⚠️ **Mid-feature release.** Tasks 1–3 of 8 done for `feat-debian-cli-support`. Mac path is unchanged and stable. The Debian path now has the `apt` install stage and a cross-platform `install-clis.sh`, so `OS=debian ./setup.sh` runs further than it did at v0.3.0 — but `link-configs.sh`, `verify-install.sh`, and `auth-checklist.sh` still have Mac-only assumptions (Claude Desktop config path, `/Applications/*.app` checks, GUI sign-in steps). End-to-end Debian readiness lands with task 7. Stay on **v0.2.0 for production Mac use** until this feature ships in full.
+
+### Added
+- **`scripts/install-apt.sh`** — Debian/Ubuntu equivalent of `install-brew.sh`. Adds two third-party apt repos with explicit keyrings (NodeSource for Node.js 22 LTS — apt's `nodejs` is too old for Gemini CLI; GitHub CLI's official repo for `gh`) and installs `nodejs`, `gh`, `jq`, `ripgrep`, `shellcheck`, `shfmt`. `shfmt` is in apt on Debian 12+ / Ubuntu 24.04+; on older releases the script falls back to fetching the matching GitHub-release binary into `/usr/local/bin/shfmt` (release tag resolved via `/releases/latest` HTTP redirect — no jq dependency, since we may be installing jq in the same run). Architecture-aware (`dpkg --print-architecture` for the `gh` repo `arch=` clause and the `shfmt` fallback URL). Idempotent: keyring/sources.list writes are guarded; apt install naturally skips installed packages. Defensive Mac guard exits 2 before any `sudo` if `OS != debian`.
+- **`--with-codex`** flag on `setup.sh` — opt-in install of OpenAI Codex CLI (`@openai/codex`), default off. Sets `WITH_CODEX=1` for the `install-clis` stage. The flag intentionally exists at the top-level orchestrator so users opt in once at the entry point, not inside a sub-script.
+
+### Changed
+- **`scripts/install-clis.sh`** is now cross-platform (sources `scripts/lib/os.sh`). Per-OS rc-file picker writes `~/.zshrc` on Mac (captured shell), `~/.zshrc` if `$SHELL` ends in `/zsh` on Debian else `~/.bashrc`. Debian-only logic: configures a user-local npm prefix at `~/.npm-global` (so `npm install -g` works without sudo) with idempotent PATH append, and hard-fails if `node --version` < 20 with a pointer to `install-apt.sh`. Mac path unchanged. Codex install + post-check entry are gated on `WITH_CODEX==1` — default runs print `==> Codex CLI: skipped (pass --with-codex to setup.sh to include)` and the binary-on-PATH check verifies only `claude` + `gemini` (no false `codex MISSING`).
+
 ## [v0.3.0] — 2026-04-27
 
 > ⚠️ **Mid-feature release.** This is task 1 of 8 for `feat-debian-cli-support`. The Mac path is unchanged and stable. The Debian path is **not yet runnable end-to-end** — `OS=debian ./setup.sh` will warn-skip the not-yet-existent `install-apt.sh` and then fail at `install-clis.sh` (still Mac-only until task 3). Stay on **v0.2.0 for production Mac use**; this tag exists for incremental tagging hygiene only.
@@ -73,6 +84,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - Initial project scaffold: bootstrapped with [agentic-harness](https://github.com/alexherrero/agentic-harness) v0.8.7 + hooks. Includes adapters for Claude Code, Antigravity, Codex, and Gemini plus `PostToolUse` / `PreCompact` / `SessionStart(compact)` hooks.
 
+[v0.4.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.4.0
 [v0.3.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.3.0
 [v0.2.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.2.0
 [v0.1.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.1.0
