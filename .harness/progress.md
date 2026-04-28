@@ -74,3 +74,10 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - README.md: intro reframed for Mac/Debian/Windows; new ### Debian / Ubuntu Usage subsection with --with-codex documented; expanded Layout per-script tree; Status section gets Debian-ready row.
 - docs/debian.md: new (~6.3 KB) — quick-start, supported-distros matrix (Debian 11/12/13 + Ubuntu 20.04/22.04/24.04), Antigravity-GUI-only callout citing official docs, toolchain detail, future-work.
 - Verified: README has 3 platform subsections; all 5 internal links from README resolve; all 5 internal links from docs/debian.md resolve; Antigravity-not-supported callout grep-matches.
+
+## /work — feat-debian-cli-support task 8 — 2026-04-28 (CLOSE-OUT)
+- features.json: valid (jq empty), feat-debian-cli-support entry well-formed, passes:false (per plan — flips at /release-gate after Debian VM exercise).
+- All 8 tasks marked [x] in PLAN.md; plan-level Status: "complete pending VM verification".
+- documenter sub-agent dispatched: 1 new wiki page (Bootstrap-A-New-Debian-Or-Ubuntu) + 4 edits (Bootstrap-A-New-Mac flipped pending->implemented, Dev-Machine-Setup-Design rewritten for cross-platform OS-dispatch architecture, Home + _Sidebar index updates).
+- 9 flat-namespace wiki links all resolve to .md files. Antigravity-GUI-only callout grep-matches in two wiki pages.
+- Remaining work for /release: Debian VM run; flip features.passes=true; final v1.0.0 release.

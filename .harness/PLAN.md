@@ -1,6 +1,6 @@
 # Plan: Debian CLI-only dev-machine support
 
-**Status:** in progress (open question 1 resolved 2026-04-27: Codex CLI is in scope on both platforms)
+**Status:** complete pending VM verification (all 8 tasks `[x]` as of 2026-04-28; `features.passes` stays `false` until end-to-end exercise on a real Debian VM, scheduled for `/release`-gate)
 **Created:** 2026-04-27
 **Brief:** Add Debian (and Debian-derivatives like Ubuntu) support to the dev-machine-setup install script. Scope is **CLI agents only — no GUI apps**, and includes **Codex CLI** alongside Claude Code + Gemini CLI on both Mac and Debian. Antigravity is GUI-only on every platform and remains out of scope. Mirror the existing Mac flow (idempotent, captured-config-driven, post-setup health-checked) where the logic is portable; diverge only where the OS forces us to.
 
@@ -74,9 +74,9 @@ On a fresh Debian/Ubuntu machine, `./setup.sh` leaves the user with the supporte
 
 ### 8. Update `features.json` + close out
 
-- **What:** Add a new feature entry `feat-debian-cli-support` to `.harness/features.json` with the 7 task summaries. Mark `passes: false` until tasks 1–7 are all `[x]` and verified end-to-end on a Debian VM. Append a single line to `.harness/progress.md` per task as work lands. Update CHANGELOG.md only at `/release` time, not per-task.
-- **Verification:** `jq empty .harness/features.json` passes; the new feature entry is present and well-formed. `.harness/progress.md` has one line per completed task.
-- **Status:** [ ]
+- **What:** Add a new feature entry `feat-debian-cli-support` to `.harness/features.json` with the 7 task summaries. Mark `passes: false` until tasks 1–7 are all `[x]` and verified end-to-end on a Debian VM. Append a single line to `.harness/progress.md` per task as work lands. Update CHANGELOG.md only at `/release` time, not per-task. **Plus:** dispatch the `documenter` sub-agent to flip the wiki/ pending pages and add a Debian how-to (this should have happened during `/plan` per the spec, but the project didn't have wiki/ pages drafted for the Debian feature at plan time, so it catches up here).
+- **Verification:** `jq empty .harness/features.json` passes; the new feature entry is present and well-formed. `.harness/progress.md` has one line per completed task. Wiki state coherent: Mac how-to flipped pending → implemented; new `wiki/how-to/Bootstrap-A-New-Debian-Or-Ubuntu.md` exists; `wiki/explanation/Dev-Machine-Setup-Design.md` rewritten for the cross-platform OS-dispatch architecture; `wiki/Home.md` + `wiki/_Sidebar.md` index the new page; all flat-namespace wiki links resolve to `.md` files.
+- **Status:** [x] (verified 2026-04-28: features.json valid (`jq empty` OK); 7 prior tasks all `[x]`; progress.md has one entry per task (plus a task-3 amendment for the Codex opt-in re-scope). Documenter pass produced 1 new page + 4 edits — all 9 flat-namespace wiki links resolve. `passes` stays `false` per the plan's contract; flips at `/release`-gate after a real Debian VM run. Plan-level Status changed from "in progress" to "complete pending VM verification".)
 
 ## Risks / open questions
 

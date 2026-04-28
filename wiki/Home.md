@@ -15,7 +15,9 @@ Tutorials walk you through a concrete outcome end-to-end.
 
 How-to guides are task-focused recipes for users who already know the basics.
 
-- [First how-to](First-How-To) — replace with a real recipe when one earns its keep.
+- [Bootstrap a new Mac](Bootstrap-A-New-Mac) — fresh Mac → full GUI + CLI dev environment in one command.
+- [Bootstrap a new Debian or Ubuntu host](Bootstrap-A-New-Debian-Or-Ubuntu) — fresh Linux host → CLI-only dev environment.
+- [First how-to](First-How-To) — placeholder; replace with a real recipe when one earns its keep.
 
 ## 📖 Looking up a detail?
 
@@ -27,6 +29,7 @@ Reference pages are the canonical lookup surface — tables of commands, flags, 
 
 Explanation pages capture intent, rationale, and trade-offs — the *why*, not the *how*.
 
+- [Dev-machine setup — design](Dev-Machine-Setup-Design) — intent, shape, and trade-offs of the OS-dispatch architecture.
 - [First explanation](First-Explanation) — the story behind this project.
 
 ## Conventions
