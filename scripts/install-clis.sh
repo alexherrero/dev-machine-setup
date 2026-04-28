@@ -1,17 +1,109 @@
 #!/usr/bin/env bash
-# install-clis.sh — install the non-brew CLIs:
-#   - Claude Code CLI via Anthropic's official curl installer  (→ ~/.local/bin/claude)
-#   - Gemini CLI via npm global (@google/gemini-cli)           (→ brew node prefix)
+# install-clis.sh — install the three CLI agents we use:
+#   - Claude Code CLI  (Anthropic's curl installer  → ~/.local/bin/claude)
+#   - Gemini CLI       (npm global, @google/gemini-cli)
+#   - Codex CLI        (npm global, @openai/codex)
 #
-# Requires node + npm from install-brew.sh. Idempotent: re-running pulls
-# the latest stable of each (no-op if already on latest).
+# Cross-platform. Requires node + npm on PATH from install-brew.sh (Mac)
+# or install-apt.sh (Debian). Idempotent: re-running pulls each tool's
+# latest stable (no-op if already current).
+#
+# PATH handling per platform:
+#   macOS  : ~/.local/bin marker appended to ~/.zshrc (captured shell).
+#            npm globals install under brew's user-writable prefix; no
+#            extra PATH entry needed.
+#   Debian : ~/.local/bin AND ~/.npm-global/bin markers. We configure a
+#            user-local npm prefix at ~/.npm-global so `npm install -g`
+#            works without sudo. RC file picked from $SHELL: ~/.zshrc
+#            if zsh, else ~/.bashrc.
+#
+# Node version: hard-fails if node < 20 on Debian (Gemini CLI requires
+# >= 20). Mac brew node is current enough that we don't probe.
 
 set -euo pipefail
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=scripts/lib/os.sh
+. "$REPO_ROOT/scripts/lib/os.sh"
+
 readonly CLAUDE_INSTALLER_URL="https://claude.ai/install.sh"
 readonly GEMINI_NPM_PACKAGE="@google/gemini-cli"
+readonly CODEX_NPM_PACKAGE="@openai/codex"
 
-# --- Claude Code CLI --------------------------------------------------------
+# --- helpers ----------------------------------------------------------------
+
+# Pick the rc file to append PATH markers to. Mac is captured zsh; Debian
+# follows whatever $SHELL points at.
+rc_file() {
+  if [[ "$OS" == "debian" ]]; then
+    case "${SHELL:-}" in
+      */zsh) echo "$HOME/.zshrc" ;;
+      *)     echo "$HOME/.bashrc" ;;
+    esac
+  else
+    echo "$HOME/.zshrc"
+  fi
+}
+
+# Append a single-line PATH export to $rc, guarded by a marker comment
+# so re-runs are a no-op.
+append_path_marker() {
+  local rc="$1" marker="$2" line="$3"
+  if ! grep -Fq "$marker" "$rc" 2>/dev/null; then
+    {
+      echo ""
+      echo "$marker"
+      # shellcheck disable=SC2016
+      echo "$line"
+    } >> "$rc"
+    echo "    appended PATH export to $rc"
+  fi
+}
+
+# Debian: configure a user-local npm prefix so `npm install -g` doesn't
+# need sudo. Also resolves the chicken-and-egg of Gemini/Codex install
+# locations on systems where the system npm prefix is /usr.
+configure_npm_prefix_debian() {
+  local prefix="$HOME/.npm-global"
+  local current_prefix
+  current_prefix="$(npm config get prefix 2>/dev/null || true)"
+  if [[ "$current_prefix" != "$prefix" ]]; then
+    npm config set prefix "$prefix"
+    echo "    npm prefix -> $prefix"
+  fi
+  mkdir -p "$prefix/bin"
+  local rc
+  rc="$(rc_file)"
+  touch "$rc"
+  # Single-quoted on purpose: we want $HOME written literally into the rc
+  # file so it expands at shell startup, not at write time.
+  # shellcheck disable=SC2016
+  append_path_marker \
+    "$rc" \
+    '# ~/.npm-global/bin (dev-machine-setup — npm globals)' \
+    'export PATH="$HOME/.npm-global/bin:$PATH"'
+  # Make resolvable in this shell for the post-check.
+  export PATH="$prefix/bin:$PATH"
+}
+
+# Hard-fail if node is too old for Gemini CLI. Only probed on Debian
+# (NodeSource pins 22 LTS so this should pass; the check exists to fail
+# fast with a clear pointer if a user manually installed an older node).
+check_node_version_debian() {
+  if ! command -v node >/dev/null 2>&1; then
+    echo "    FAIL: node not found. Run scripts/install-apt.sh first." >&2
+    exit 1
+  fi
+  local major
+  major="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
+  if ((major < 20)); then
+    echo "    FAIL: Node $(node --version) is too old. Gemini CLI requires >= 20." >&2
+    echo "          Run scripts/install-apt.sh to install NodeSource node 22 LTS." >&2
+    exit 1
+  fi
+}
+
+# --- 1. Claude Code CLI -----------------------------------------------------
 
 echo "==> Claude Code CLI"
 if command -v claude >/dev/null 2>&1; then
@@ -21,31 +113,38 @@ fi
 # either upgrades to latest stable or no-ops if already current.
 curl -fsSL "$CLAUDE_INSTALLER_URL" | bash -s stable
 
-# Ensure ~/.local/bin is on PATH in future shells. Uses a marker so the
-# line is appended exactly once, even if the user has other tooling.
-zshrc="$HOME/.zshrc"
-marker='# ~/.local/bin (dev-machine-setup — Claude Code CLI)'
-if ! grep -Fq "$marker" "$zshrc" 2>/dev/null; then
-  {
-    echo ""
-    echo "$marker"
-    # Intentionally single-quoted — we want the literal $HOME written into
-    # .zshrc so it resolves at shell startup, not at write time.
-    # shellcheck disable=SC2016
-    echo 'export PATH="$HOME/.local/bin:$PATH"'
-  } >> "$zshrc"
-  echo "    appended PATH export to $zshrc"
-fi
-# Make it resolvable in this shell too, for the post-check below.
+# Ensure ~/.local/bin is on PATH for future shells.
+RC_FILE="$(rc_file)"
+touch "$RC_FILE"
+# Single-quoted on purpose: we want $HOME written literally into the rc
+# file so it expands at shell startup, not at write time.
+# shellcheck disable=SC2016
+append_path_marker \
+  "$RC_FILE" \
+  '# ~/.local/bin (dev-machine-setup — Claude Code CLI)' \
+  'export PATH="$HOME/.local/bin:$PATH"'
+# Resolve in this shell too, for the post-check.
 export PATH="$HOME/.local/bin:$PATH"
 
-# --- Gemini CLI -------------------------------------------------------------
+# --- 2. npm prerequisite checks --------------------------------------------
 
-echo "==> Gemini CLI ($GEMINI_NPM_PACKAGE)"
+echo "==> npm prerequisites"
 if ! command -v npm >/dev/null 2>&1; then
-  echo "    FAIL: npm not found. Run scripts/install-brew.sh first." >&2
+  if [[ "$OS" == "macos" ]]; then
+    echo "    FAIL: npm not found. Run scripts/install-brew.sh first." >&2
+  else
+    echo "    FAIL: npm not found. Run scripts/install-apt.sh first." >&2
+  fi
   exit 1
 fi
+if [[ "$OS" == "debian" ]]; then
+  check_node_version_debian
+  configure_npm_prefix_debian
+fi
+
+# --- 3. Gemini CLI ----------------------------------------------------------
+
+echo "==> Gemini CLI ($GEMINI_NPM_PACKAGE)"
 if command -v gemini >/dev/null 2>&1; then
   echo "    currently: $(gemini --version 2>&1 | head -1)"
 fi
@@ -53,11 +152,19 @@ fi
 # "up to date" when already latest.
 npm install -g "$GEMINI_NPM_PACKAGE"
 
-# --- Post-check -------------------------------------------------------------
+# --- 4. Codex CLI -----------------------------------------------------------
+
+echo "==> Codex CLI ($CODEX_NPM_PACKAGE)"
+if command -v codex >/dev/null 2>&1; then
+  echo "    currently: $(codex --version 2>&1 | head -1)"
+fi
+npm install -g "$CODEX_NPM_PACKAGE"
+
+# --- 5. Post-check ----------------------------------------------------------
 
 echo "==> verifying"
 missing=()
-for bin in claude gemini; do
+for bin in claude gemini codex; do
   if command -v "$bin" >/dev/null 2>&1; then
     version=$("$bin" --version 2>&1 | head -1)
     printf '    %-8s %-40s %s\n' "$bin" "$(command -v "$bin")" "$version"

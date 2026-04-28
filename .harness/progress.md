@@ -43,3 +43,8 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - scripts/install-apt.sh: NodeSource (node 22 LTS) + GitHub CLI apt repos with explicit keyrings, apt-installs nodejs/gh/jq/ripgrep/shellcheck/shfmt, shfmt fallback to GitHub release binary on older distros (Debian 11, Ubuntu 22.04).
 - Idempotent: keyring + sources.list writes guarded by file-exists checks. Defensive Mac guard exits 2 before any sudo if OS != debian.
 - Verified: shellcheck -x clean, bash -n clean, Mac guard fires correctly, setup.sh dispatch resolves install-apt.sh as the apt stage on Debian. Runtime VM verification deferred to /release.
+
+## /work — feat-debian-cli-support task 3 — 2026-04-27
+- scripts/install-clis.sh: cross-platform (sources os.sh), per-OS rc_file() picker, Debian npm-prefix at ~/.npm-global, Node ≥ 20 guard on Debian, Codex CLI added as third install (@openai/codex).
+- Live run on Mac: claude 2.1.112 + gemini 0.39.1 + codex 0.125.0 (new). Idempotent re-run preserves PATH markers.
+- Verified: shellcheck -x clean; rc_file() correct on debian/zsh, debian/bash, mac; harness verify.sh ok.
