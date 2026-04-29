@@ -1,6 +1,6 @@
 # Plan: CI verification for setup scripts (Mac, Ubuntu, Windows smoke)
 
-**Status:** drafted (2026-04-28)
+**Status:** complete (2026-04-29 — first three-platform green dispatch on run 25087515129; v1.0.0 ships)
 **Brief:** Add a manually-triggered GitHub Actions workflow that runs `setup.sh` / `setup.ps1` on fresh runners across macOS, Ubuntu, and Windows. When all three jobs pass on a single dispatch, the install scripts are demonstrably working end-to-end — that's the gate that justifies flipping `feat-debian-cli-support.passes=true` and shipping v1.0.0. Windows is **smoke-only** in this plan (orchestrator runs cleanly + all `.ps1` files AST-parse); the immediate follow-on plan (`feat-windows-cli-support`) replaces the smoke job with real Windows install verification.
 
 ## Goal
@@ -73,7 +73,7 @@ A single workflow file, `.github/workflows/ci-tests.yml`, runs three jobs in par
   - `feat-debian-cli-support.passes` → `true` (CI is the VM verification per the prior plan's contract; smoke-only Windows is a known limitation tracked by the follow-on `feat-windows-cli-support`).
 - This is a **manual commit**, not auto-pushed by CI. After it lands, `ship-release v1.0.0` (explicit version since 0.x → 1.0 isn't auto-classified by the conventional-commit rules).
 - **Verification:** `jq empty .harness/features.json` passes. Both `passes` flags read `true`. v1.0.0 release exists with notes pointing at the first green CI run URL.
-- **Status:** [ ]
+- **Status:** [x] (verified 2026-04-29: first three-platform green dispatch on run 25087515129 (macOS 1m34s + Ubuntu 1m20s + Windows 0m25s, all `success`). Required two CI-fix iterations to get there: NodeSource key dearmor (Ubuntu) and Claude settings.json kill-switch merge (macOS), both committed in d67affb. `feat-ci-verification.passes` and `feat-debian-cli-support.passes` flipped to `true` in this commit. v1.0.0 ships next.)
 
 ## Risks / open questions
 

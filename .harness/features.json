@@ -18,7 +18,7 @@
     },
     {
       "id": "feat-debian-cli-support",
-      "description": "Debian/Ubuntu CLI-only path for setup.sh: OS detection, apt install stage, shared cross-platform CLI/link-configs/verify/auth-checklist scripts, GUI-app stage filtered out.",
+      "description": "Debian/Ubuntu CLI-only path for setup.sh: OS detection, apt install stage, shared cross-platform CLI/link-configs/verify/auth-checklist scripts, GUI-app stage filtered out. End-to-end-verified by ci-tests.yml on ubuntu-latest (run 25087515129).",
       "steps": [
         "OS-detection helper + setup.sh dispatch (macos | debian | else error)",
         "scripts/install-apt.sh — NodeSource + gh apt repos, apt install + shfmt fallback",
@@ -29,17 +29,17 @@
         "docs: README Debian subsection + new docs/debian.md",
         "features.json + progress.md bookkeeping"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "feat-ci-verification",
-      "description": "Manually-dispatched GitHub Actions workflow that runs setup.sh / setup.ps1 on fresh Mac, Ubuntu, and Windows runners. Mac uses --skip-apps (GUI installer needs a human); Windows is smoke-only (orchestrator + AST parse). When all three green on one dispatch, feat-debian-cli-support.passes flips true and v1.0.0 ships.",
+      "description": "Manually-dispatched GitHub Actions workflow that runs setup.sh / setup.ps1 on fresh Mac, Ubuntu, and Windows runners. Mac uses --skip-apps (GUI installer needs a human); Windows is smoke-only (orchestrator + AST parse). First three-platform green dispatch on 2026-04-29 (run 25087515129) authorised flipping feat-debian-cli-support.passes=true and shipping v1.0.0.",
       "steps": [
         ".github/workflows/ci-tests.yml — workflow with macos-test / ubuntu-test / windows-test jobs, workflow_dispatch only, cancel-in-progress concurrency",
         "README badge + docs update (debian.md future-work pointer at CI)",
         "close out: flip feat-ci-verification.passes and feat-debian-cli-support.passes to true after first three-platform green run; v1.0.0 release"
       ],
-      "passes": false
+      "passes": true
     }
   ]
 }

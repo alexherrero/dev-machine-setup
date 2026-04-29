@@ -106,3 +106,10 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - install-apt.sh: install_keyring gains armored=0|1 param; NodeSource key piped through gpg --dearmor (root cause: NO_PUBKEY error in CI run 25087325478).
 - link-configs.sh: new ensure_claude_co_authored_by_disabled() merges includeCoAuthoredBy=false into ~/.claude/settings.json post-copy. Fixes Mac CI false-warn on fresh runners where Claude installer creates a default settings.json before our seed runs.
 - Verified: merge path adds key when missing; idempotent path skips when already set; Mac SKIP_APPS=1 verify-install reports 26 ok / 0 warn.
+
+## /work — feat-ci-verification task 3 — 2026-04-29 (CLOSE-OUT)
+- First three-platform green CI dispatch (run 25087515129): macOS 1m34s + Ubuntu 1m20s + Windows 0m25s all success.
+- Required two CI-fix iterations (NodeSource dearmor, Claude kill-switch merge) committed in d67affb.
+- features.json: feat-ci-verification.passes and feat-debian-cli-support.passes both flipped to true.
+- PLAN.md plan-level Status: complete. All 3 tasks [x].
+- Next: ship-release v1.0.0 (explicit version, major bump).
