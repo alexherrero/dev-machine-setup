@@ -97,7 +97,7 @@
   - GUI sign-ins (since Windows = Mac scope): "Open Antigravity from the Start menu" + "Open Claude Desktop from the Start menu". Use `Start-Process` if user wants the script to launch the apps directly, but default is just text instructions.
   - Heading: "Installed tooling is in place — complete each step below."
 - **Verification:** AST parse clean. On Windows VM: 5 numbered items default (claude, gh, gemini, Antigravity, Claude Desktop). With `WITH_CODEX=1`: 6 items (+ codex). Output is plain text, no errors.
-- **Status:** [ ]
+- **Status:** [x] (2026-04-29: scripts/auth-checklist.ps1 rewritten from stub. Always 5 numbered items on Windows: claude login, gh auth login, gemini (first run), Open Antigravity from Start menu, Open Claude from Start menu. Codex on Windows is skip-only regardless of WITH_CODEX (install-clis.ps1 doesn't install it), so the list size doesn't grow with WITH_CODEX=1 — instead a Codex note appears at the end with a different message depending on opt-in: `WITH_CODEX=1` mentions openai/codex#18648 and the Mac/Linux-only status; default mentions the flag exists. Steps built into a `[pscustomobject]` array with auto-numbering. PowerShell-native string formatting; no jq/bash artifacts. Local pwsh AST parse not run; CI AST step is the gate; runtime exercise lands at task 8.)
 
 ### 7. `setup.ps1` — orchestrator real-stage wiring
 

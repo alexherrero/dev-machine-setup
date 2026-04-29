@@ -158,3 +158,8 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - Test-WindowsApp: registry uninstall-key search across HKLM + HKLM/WOW6432Node + HKCU. Limitation: pure-MSIX installs may register elsewhere — flagged for follow-on.
 - PostToolUse hook check uses ConvertTo-Json -Compress + regex match for verify.sh, mirroring jq tostring/test pattern.
 - Local pwsh AST not run; CI AST step is the gate.
+
+## /work — feat-windows-cli-support task 6 — 2026-04-29
+- scripts/auth-checklist.ps1: rewritten from stub. 5 numbered items (claude, gh, gemini, Antigravity, Claude Desktop) regardless of WITH_CODEX since Codex is skip-only on Windows.
+- Codex note appended at end with WITH_CODEX-aware message.
+- pscustomobject array + auto-numbering loop. PowerShell-native, no jq/bash artifacts.
