@@ -133,3 +133,9 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - Pre-flight winget existence check (exit 2 with installer pointer); idempotent skip-if-on-PATH; PATH registry refresh into running shell; post-check loop (git/node/npm/gh/rg).
 - Local pwsh AST parse not feasible (pwsh not installed; brew cask needs admin); harness verify.sh accepts the file. Windows CI AST step is the real gate.
 - Existing scripts/install-brew.ps1 stub left in place; task 7 will rename the setup.ps1 stage and remove the dead stub.
+
+## /work — feat-windows-cli-support task 2 — 2026-04-29
+- scripts/install-clis.ps1: rewritten from stub. Claude via winget (Anthropic.ClaudeCode), Gemini via npm install -g, Codex skip-with-warn (cites openai/codex#18648 in the message).
+- Three approved-verb helpers: Update-PathFromRegistry, Add-DirToUserPath, Test-NodeVersion. PSScriptAnalyzer-clean naming.
+- Idempotent: skip-if-on-PATH for Claude; npm install -g is naturally idempotent; user-PATH npm-prefix add is dedupe-checked.
+- Verified: harness verify.sh ok; CI AST step is the real gate.

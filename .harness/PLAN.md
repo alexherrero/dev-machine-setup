@@ -53,7 +53,7 @@
   - Hard-fail with a clear message if `node --version` reports < 20 (Gemini CLI requires ≥ 20). winget Node LTS is currently 22, so this guard is defensive.
   - Post-check: `claude --version`, `gemini --version`, plus `codex --version` if WITH_CODEX=1 and the Codex install succeeded.
 - **Verification:** AST parse clean. On Windows VM: all three (or two if Codex skipped) binaries resolve and `--version` exits 0. Re-run is idempotent.
-- **Status:** [ ]
+- **Status:** [x] (2026-04-29: scripts/install-clis.ps1 rewritten from stub. Three install paths: Claude via `winget install --exact --id Anthropic.ClaudeCode --silent`; Gemini via `npm install -g @google/gemini-cli`; Codex skip-with-warn (warn message differentiates between `--with-codex`-opted-in vs default). Three approved-verb helpers: `Update-PathFromRegistry` (joins Machine + User scopes from registry into `$env:Path`), `Add-DirToUserPath` (idempotent registry-PATH append + session splice), `Test-NodeVersion` (hard-fails < 20 with pointer to install-tooling.ps1). Default npm prefix `%APPDATA%\npm` added to user PATH before `npm install -g` so gemini.cmd resolves. winget exit codes treated as warnings, not failures (post-check is the gate). Post-check expects only claude + gemini regardless of WITH_CODEX (Codex never installs on Windows in v1). Local pwsh AST parse not run (pwsh missing); harness verify.sh accepts. Windows CI's AST step is the gate; runtime exercise lands at task 8.)
 
 ### 3. `scripts/install-gui-apps.ps1` — winget GUI app installer
 
