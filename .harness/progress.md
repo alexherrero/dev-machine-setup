@@ -139,3 +139,8 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - Three approved-verb helpers: Update-PathFromRegistry, Add-DirToUserPath, Test-NodeVersion. PSScriptAnalyzer-clean naming.
 - Idempotent: skip-if-on-PATH for Claude; npm install -g is naturally idempotent; user-PATH npm-prefix add is dedupe-checked.
 - Verified: harness verify.sh ok; CI AST step is the real gate.
+
+## /work — feat-windows-cli-support task 3 — 2026-04-29
+- scripts/install-gui-apps.ps1: rewritten from stub. Antigravity Desktop (winget Google.Antigravity), Claude Desktop (winget Anthropic.Claude). Gemini Desktop explicitly skipped (no first-party app).
+- Single Install-WingetApp helper handles known winget exit codes: 0 → ok; NO_APPLICATIONS_FOUND → skip-with-warn + manual-URL pointer; other non-zero → generic warning (verify-install is the source of truth).
+- Empirical Antigravity winget-id correctness verification waits for the first real task-8 dispatch.

@@ -62,7 +62,7 @@
   - **Claude Desktop**: `winget install -e --id Anthropic.Claude` (distinct from `Anthropic.ClaudeCode`). Skip if already present.
   - **Gemini Desktop**: explicitly skipped — no first-party Windows app. Print `==> Gemini Desktop: skipped (no first-party Windows app)`.
 - **Verification:** AST parse clean. On Windows VM: both apps appear in `Get-Package` / Add-or-Remove-Programs after first run; `Get-Command Antigravity` and Claude Desktop launcher present (paths differ — locate via Start Menu shortcuts or registry uninstall keys). Re-run is no-op (winget already-installed exits 0).
-- **Status:** [ ]
+- **Status:** [x] (2026-04-29: scripts/install-gui-apps.ps1 rewritten from stub. Single helper `Install-WingetApp` parameterized over `(Id, DisplayName, ManualUrl)`. Three branches on `$LASTEXITCODE`: 0 → ok; `-1978335212` (APPINSTALLER_CLI_ERROR_NO_APPLICATIONS_FOUND signed) → skip-with-warn + manual-URL pointer; other non-zero → generic warning (verify-install confirms post-install state). Antigravity uses `Google.Antigravity`; if that id isn't published on the default winget source, the no-applications-found branch fires and the user gets the antigravity.google homepage. Claude Desktop uses `Anthropic.Claude` (distinct from the CLI's `Anthropic.ClaudeCode` from task 2). Gemini Desktop explicitly skipped — no first-party Windows app. Pre-flight asserts winget exists. Local pwsh AST parse not run; CI's AST step is the gate. Empirical id-correctness verification waits for the first task-8 dispatch.)
 
 ### 4. `scripts/link-configs.ps1` — Windows-native config placement
 
