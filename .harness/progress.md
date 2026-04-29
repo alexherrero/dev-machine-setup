@@ -120,3 +120,9 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - Scope: Windows = Mac scope (full GUI + CLI). Antigravity + Claude Desktop via winget. Gemini Desktop no first-party app — skipped. Codex skip-with-warn (upstream npm broken). Native Claude installer + winget for everything else. PowerShell-native JSON parsing, no jq on Windows.
 - 3 open questions surfaced inline with defaults: (1) Codex skip-with-warn vs GitHub-Release fallback; (2) Claude Code native installer vs winget; (3) Antigravity argv.json path empirical verification.
 - Next: confirm open questions then /work task 1.
+
+## /plan — feat-windows-cli-support open-questions resolved — 2026-04-29
+- Q1 Codex on Windows: skip-with-warn (default applied).
+- Q2 Claude Code install: winget (override of original recommendation; constraints + task 2 updated).
+- Q3 Antigravity argv.json: verify-empirically-then-fall-back-to-skip (default applied).
+- PLAN.md plan-level Status: in progress. Ready for /work task 1.

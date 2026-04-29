@@ -1,6 +1,6 @@
 # Plan: Real Windows CLI + GUI install support (feat-windows-cli-support)
 
-**Status:** drafted (2026-04-29) — awaiting confirmation on the three open questions in §Risks below before /work starts.
+**Status:** in progress (2026-04-29 — three open questions resolved: Codex skip-with-warn, Claude Code via winget, Antigravity argv.json verify-empirically-then-fall-back-to-skip).
 **Brief:** Replace the smoke-only Windows job in `ci-tests.yml` with real install verification. Windows matches **Mac scope** (full GUI + CLI: Antigravity Desktop + Claude Desktop), not Debian's CLI-only scope. The smoke job from `feat-ci-verification` (orchestrator runs cleanly + AST parse) gets upgraded to a real install pipeline that exercises every stage script.
 
 ## Goal
@@ -11,7 +11,7 @@
 
 - **Windows = Mac scope** (full GUI + CLI), not Debian (CLI-only). Antigravity Desktop and Claude Desktop are installed via winget. Gemini Desktop has no first-party Windows app — skipped.
 - **winget is the package manager.** Pre-installed on Windows 10 1809+ / Windows 11. No Chocolatey fallback (winget covers our deps).
-- **Claude Code via native installer**, not winget. `irm https://claude.ai/install.ps1 | iex` matches the Mac/Linux `claude.ai/install.sh` model (auto-updating in background). Documents the winget alternative in `docs/windows.md` for users who prefer system-managed installs.
+- **Claude Code via winget** (`Anthropic.ClaudeCode`). System-managed; doesn't auto-update (apt-style lifecycle, user runs `winget upgrade` periodically). Different binary location than the native installer would use; the native `irm | iex` alternative is documented in `docs/windows.md` for users who prefer auto-updating installs. Installing both is documented as a footgun (claude-code#31980) — the script picks one path and sticks to it.
 - **No npm prefix relocation on Windows.** npm-globals on Windows install to `%APPDATA%\npm` by default; we ensure that path is in user PATH after `npm install -g`. Mac/Linux's `~/.npm-global` workaround is for sudo-avoidance — not needed on Windows where npm-globals are user-scoped already.
 - **Persistent user PATH model**, not shell-rc. Updates via `[Environment]::SetEnvironmentVariable("Path", $newPath, "User")`. The Mac/Linux marker-block-in-rc-file pattern doesn't apply.
 - **Symlink CLAUDE.md with copy fallback.** Try `New-Item -ItemType SymbolicLink`; on `UnauthorizedAccessException` (no admin, no Developer Mode) fall back to `Copy-Item` with a warning that repo edits won't auto-sync. Document the Developer-Mode-toggle workaround in `docs/windows.md`.
@@ -47,7 +47,7 @@
 ### 2. `scripts/install-clis.ps1` — real CLI installs
 
 - **What:** Replace the stub. Three installs (Codex conditional):
-  - **Claude Code**: `irm https://claude.ai/install.ps1 | iex`. Lands at `%USERPROFILE%\.local\bin\claude.exe`. Installer appends `%USERPROFILE%\.local\bin` to user PATH. Re-running upgrades to latest stable or no-ops.
+  - **Claude Code**: `winget install -e --id Anthropic.ClaudeCode --accept-package-agreements --accept-source-agreements --silent`. winget manages the binary location and PATH update. Re-running is a no-op (winget exits 0 when already installed). Per-user winget upgrade is the user's responsibility (`winget upgrade Anthropic.ClaudeCode`).
   - **Gemini CLI**: `npm install -g @google/gemini-cli`. After install, ensure `%APPDATA%\npm` is in user PATH (npm doesn't always do this on Windows).
   - **Codex CLI**: gated on `$env:WITH_CODEX -eq '1'`. **Default behavior on Windows is skip-with-warn** (per the open question 1 default): print the "not supported on Windows yet" banner and continue without erroring. If the user opts into the GitHub-Release fallback (per open question 1), we instead download `codex-x86_64-pc-windows-msvc.tar.gz` from the latest release and drop `codex.exe` into `%USERPROFILE%\.local\bin\`.
   - Hard-fail with a clear message if `node --version` reports < 20 (Gemini CLI requires ≥ 20). winget Node LTS is currently 22, so this guard is defensive.
@@ -130,22 +130,13 @@
 
 ## Risks / open questions
 
-These are the genuine ambiguities the plan cannot resolve without input. Defaults are noted; please confirm or override.
+All three resolved on 2026-04-29:
 
-1. **Codex on Windows: skip-with-warn or GitHub-Release fallback?** *(default: skip-with-warn)*. The `@openai/codex` npm package is currently broken on Windows (issues #18648, #11744). Two paths:
-   - **(a) Skip-with-warn (default).** `--with-codex` on Windows prints `==> Codex CLI: skipped (not supported on Windows yet — see openai/codex#18648)` and continues. Zero implementation cost; Mac and Linux still install Codex normally.
-   - **(b) GitHub-Release fallback.** Download `codex-x86_64-pc-windows-msvc.tar.gz` from the latest release and drop `codex.exe` into `%USERPROFILE%\.local\bin\`. Mirror the shfmt-fallback pattern from `install-apt.sh`. ~30 lines of PowerShell. Means Codex actually works on Windows but adds maintenance surface for a tool whose first-party Windows support is "experimental."
-   - **My recommendation: (a).** Revisit when OpenAI fixes the npm package.
+1. ~~**Codex on Windows: skip-with-warn or GitHub-Release fallback?**~~ **Resolved → skip-with-warn.** Default applies. `--with-codex` on Windows prints `==> Codex CLI: skipped (not supported on Windows yet — see openai/codex#18648)` and continues without erroring. Mac and Linux still install Codex normally. Revisit when OpenAI fixes the npm package.
 
-2. **Claude Code Windows install method: native installer or winget?** *(default: native installer)*.
-   - **(a) Native installer** (`irm https://claude.ai/install.ps1 | iex`). Auto-updates in background. Symmetric with Mac/Linux's `claude.ai/install.sh`. Drops binary at `%USERPROFILE%\.local\bin\claude.exe`. Recommended for parity with what the existing Mac/Linux scripts do.
-   - **(b) winget** (`winget install Anthropic.ClaudeCode`). System-managed, no auto-update. Drops binary in a different location than the native installer. Installing both is documented as a footgun.
-   - **My recommendation: (a) native installer.** docs/windows.md mentions the winget alternative for users who prefer system-managed installs.
+2. ~~**Claude Code Windows install method: native installer or winget?**~~ **Resolved → winget.** Override of the original recommendation; user prefers system-managed installs over auto-updating curl-style. `winget install -e --id Anthropic.ClaudeCode`. Constraints section updated. Native `irm | iex` documented in `docs/windows.md` as the alternative for users who want auto-updates. Installing both is a footgun (claude-code#31980); the script doesn't.
 
-3. **Antigravity `argv.json` path on Windows.** Google's docs only confirm `%APPDATA%\Antigravity\` for auth-tokens and Cache; the VSCode-fork convention is `%USERPROFILE%\.antigravity\argv.json`. Plan defaults to the VSCode convention, with empirical verification during /work task 4 (`link-configs.ps1`):
-   - If `%USERPROFILE%\.antigravity\argv.json` exists or is created by Antigravity on first run, seed it as planned.
-   - If it doesn't exist and Antigravity uses `%APPDATA%\Antigravity\argv.json` instead, switch to that path in the script and document.
-   - If neither exists and we can't determine where Antigravity stores its workbench config, **drop the `argv.json` placement on Windows** and document — it's a usability nicety, not a hard requirement. Antigravity will use defaults on first launch.
+3. ~~**Antigravity `argv.json` path on Windows.**~~ **Resolved → verify-empirically-then-fall-back-to-skip.** Default applies. /work task 4 (`link-configs.ps1`) starts by trying `%USERPROFILE%\.antigravity\argv.json` (VSCode-fork convention). If empirical testing on a Windows host confirms a different path, switch to that. If neither path holds, drop the `argv.json` placement on Windows entirely (Antigravity falls back to defaults on first launch — usability nicety, not a hard requirement) and document the call.
 
 ## Verification strategy
 
