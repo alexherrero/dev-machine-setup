@@ -208,7 +208,7 @@ function Test-DirNonEmpty {
   }
   $count = @(Get-ChildItem -LiteralPath $Dir -ErrorAction SilentlyContinue).Count
   if ($count -gt 0) {
-    Write-Ok "$Desc: $count entries in $Dir"
+    Write-Ok "${Desc}: $count entries in $Dir"
   }
   else {
     Write-Warn "$Desc dir empty: $Dir"
