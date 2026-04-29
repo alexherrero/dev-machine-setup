@@ -42,7 +42,7 @@
   - After installs, refresh user PATH from registry into the current session (`$env:Path = [Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [Environment]::GetEnvironmentVariable("Path","User")`) so subsequent stages see the new tools.
   - Post-check: `git --version`, `node --version`, `npm --version`, `gh --version`, `rg --version` all exit 0.
 - **Verification:** `pwsh AST parse` (via `.harness/verify.sh` on the Windows runner — actually, our verify.sh skips when pwsh isn't available; the AST step in `windows-test` covers this). On Windows VM: every winget call is a no-op on second run (winget's `--accept-package-agreements` is idempotent — exits 0 even when already installed). All five binaries on PATH after first run.
-- **Status:** [ ]
+- **Status:** [x] (2026-04-29: scripts/install-tooling.ps1 created. Pre-flight winget existence check (exits 2 with App Installer pointer if missing); 4 winget packages installed via parallel-array `[pscustomobject]@{Id=..., Bin=...}` (Git.Git, OpenJS.NodeJS.LTS, GitHub.cli, BurntSushi.ripgrep.MSVC); skip-if-binary-on-PATH for idempotency; PATH refresh from registry (Machine + User scopes joined) into the running shell; post-check loop verifies git/node/npm/gh/rg all resolve. Local pwsh AST parse not run (pwsh not installed on this Mac and brew cask requires sudo); harness verify.sh accepts the file (silent skip on the AST gate when pwsh missing). The Windows CI job's "AST-parse all .ps1 files" step is the actual AST gate; real winget runtime exercise lands when task 8 upgrades the windows-test job from smoke to real install.)
 
 ### 2. `scripts/install-clis.ps1` — real CLI installs
 

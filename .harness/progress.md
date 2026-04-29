@@ -126,3 +126,10 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - Q2 Claude Code install: winget (override of original recommendation; constraints + task 2 updated).
 - Q3 Antigravity argv.json: verify-empirically-then-fall-back-to-skip (default applied).
 - PLAN.md plan-level Status: in progress. Ready for /work task 1.
+
+## /work — feat-windows-cli-support task 1 — 2026-04-29
+- scripts/install-tooling.ps1: winget toolchain installer. Mirrors install-brew.sh / install-apt.sh shape.
+- Installs Git.Git (Claude Code dep), OpenJS.NodeJS.LTS, GitHub.cli, BurntSushi.ripgrep.MSVC. Skips jq (PowerShell native), shellcheck, shfmt.
+- Pre-flight winget existence check (exit 2 with installer pointer); idempotent skip-if-on-PATH; PATH registry refresh into running shell; post-check loop (git/node/npm/gh/rg).
+- Local pwsh AST parse not feasible (pwsh not installed; brew cask needs admin); harness verify.sh accepts the file. Windows CI AST step is the real gate.
+- Existing scripts/install-brew.ps1 stub left in place; task 7 will rename the setup.ps1 stage and remove the dead stub.
