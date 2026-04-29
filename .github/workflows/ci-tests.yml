@@ -162,6 +162,12 @@ jobs:
         env:
           SKIP_APPS: '1'
         run: |
+          # Refresh PATH from the registry: winget installs in the previous
+          # step landed in the user PATH hive, but this is a fresh GH Actions
+          # step shell that inherited the runner agent's stale PATH (captured
+          # at service start, before our winget calls). Without this refresh,
+          # rg + claude would WARN even though they were installed.
+          $env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User')
           ./scripts/verify-install.ps1 6>&1 | Tee-Object -FilePath verify.out
           if (-not (Select-String -Path verify.out -Pattern 'summary:.*0 warn' -Quiet)) {
             Write-Error "verify-install reported warns; expected 0"
