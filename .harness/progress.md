@@ -144,3 +144,10 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - scripts/install-gui-apps.ps1: rewritten from stub. Antigravity Desktop (winget Google.Antigravity), Claude Desktop (winget Anthropic.Claude). Gemini Desktop explicitly skipped (no first-party app).
 - Single Install-WingetApp helper handles known winget exit codes: 0 → ok; NO_APPLICATIONS_FOUND → skip-with-warn + manual-URL pointer; other non-zero → generic warning (verify-install is the source of truth).
 - Empirical Antigravity winget-id correctness verification waits for the first real task-8 dispatch.
+
+## /work — feat-windows-cli-support task 4 — 2026-04-29
+- scripts/link-configs.ps1: rewritten from stub. Mirror of link-configs.sh with PowerShell-native helpers and Windows-specific symlink fallback.
+- Five config placements: CLAUDE.md symlink-with-copy-fallback, claude/gemini/antigravity JSON copy-if-absent, explicit skip for MSIX-mess Claude Desktop config.
+- Co-Authored-By kill-switch merge via ConvertFrom-Json/ConvertTo-Json roundtrip (no jq dep on Windows).
+- Strict-JSON validation via ConvertFrom-Json; JSONC for argv.json strips // comments via regex.
+- Antigravity argv.json placed at VSCode-convention path; empirical verification waits for task 8 CI.
