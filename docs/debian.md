@@ -122,10 +122,18 @@ itself may be installing in the same run).
 
 ## Future work
 
-- **Reference Debian VM** for `/release`-gate manual verification.
-  Static analysis covers most of the install path on a Mac dev box,
-  but the `apt update` + signed-keyring + sudo flow needs a real
-  Linux host before the feature can be marked fully passing.
+- **CI verification** *(scheduled — `feat-ci-verification` plan in
+  flight)*. Replaces the original "reference Debian VM" idea: the
+  [`ci-tests.yml`](../.github/workflows/ci-tests.yml) workflow runs
+  `setup.sh` end-to-end on a fresh `ubuntu-latest` runner whenever
+  manually dispatched. When that job passes (alongside the macOS and
+  Windows-smoke jobs), `feat-debian-cli-support.passes` flips to
+  `true` and v1.0.0 ships. Until then this Debian path is "feature-
+  complete via static analysis but not VM-verified".
+- **Other Ubuntu / Debian releases.** CI runs on `ubuntu-latest` only
+  (currently 24.04 Noble). The shfmt-from-GitHub-release fallback path
+  (Debian 11 / Ubuntu 22.04) is not exercised in CI; would need a
+  matrix runner. Acceptable gap for now.
 - **GUI apps on Linux** (Claude Desktop AppImage / `.deb`, Gemini
   Desktop, etc.) — out of scope here. Open as a separate plan if
   desired.

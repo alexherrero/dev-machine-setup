@@ -95,3 +95,9 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - Windows job (windows-latest): smoke only — orchestrator runs cleanly + AST-parse all .ps1 files.
 - Scope expansion: SKIP_APPS env-var support added to setup.sh + verify-install.sh (~10 lines) so Mac --skip-apps reports 0 warns. Mirrors WITH_CODEX pattern. Mac default still 30 ok / 0 warn.
 - Verified: actionlint clean; structural YAML correct; SKIP_APPS gating works locally.
+
+## /work — feat-ci-verification task 2 — 2026-04-28
+- README.md: GH Actions CI badge added (linked to actions/workflows/ci-tests.yml); new ## Testing section explains manual workflow dispatch flow + cancel-in-progress concurrency.
+- docs/debian.md: Future work section rewritten — Reference Debian VM entry replaced by CI-verification pointer at .github/workflows/ci-tests.yml; new "Other Ubuntu / Debian releases" entry flags the shfmt-fallback CI gap.
+- "Update prior feat-debian-cli-support plan section" sub-step was a no-op — prior plan was overwritten; equivalent state lives in features.json + CHANGELOG.
+- Verified: 6 README + 6 docs/debian.md internal links resolve; anchor target exists.

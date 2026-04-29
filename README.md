@@ -1,5 +1,7 @@
 # dev-machine-setup <img src="https://img.shields.io/badge/Claude-D97757?logo=claude&logoColor=white&style=flat-square" alt="Claude" align="right"> <img src="https://img.shields.io/badge/Gemini-4285F4?logo=googlegemini&logoColor=white&style=flat-square" alt="Gemini" align="right"> <img src="https://img.shields.io/badge/Antigravity-1A73E8?logo=google&logoColor=white&style=flat-square" alt="Antigravity" align="right">
 
+[![CI tests](https://github.com/alexherrero/dev-machine-setup/actions/workflows/ci-tests.yml/badge.svg)](https://github.com/alexherrero/dev-machine-setup/actions/workflows/ci-tests.yml)
+
 Opinionated one-shot bootstrap for a Mac (full GUI + CLI) or Debian /
 Ubuntu (CLI-only) dev environment built around AI coding tools (Claude,
 Gemini, optionally OpenAI Codex; Antigravity Desktop on Mac).
@@ -84,6 +86,29 @@ for the supported-distro matrix.
 as stubs (matching the Mac shape) so the orchestrator's flag surface
 stays coherent across platforms; real Windows work happens against a
 reference VM in a future plan. See [docs/windows.md](docs/windows.md).
+
+## Testing
+
+CI is **manually dispatched** — no auto-runs on push or PR. The
+[`ci-tests.yml`](.github/workflows/ci-tests.yml) workflow runs `setup.sh`
+end-to-end on a fresh `macos-latest` runner (`--skip-apps`, since the
+GUI installer needs a human) and a fresh `ubuntu-latest` runner (full
+Debian path), plus a Windows smoke job that verifies `setup.ps1` runs
+its stubs cleanly and every `.ps1` parses. Each platform's job asserts
+`verify-install` reports zero warns and that a re-run produces no repo
+drift.
+
+To dispatch:
+
+1. Open the [Actions tab](https://github.com/alexherrero/dev-machine-setup/actions)
+   on GitHub.
+2. Pick **CI tests** in the left sidebar.
+3. Click **Run workflow** → **Run workflow** (default branch `main`).
+
+Concurrency is `cancel-in-progress`: dispatching again while a run is
+active supersedes the older one. Real Windows install verification
+(beyond smoke) is the immediate next plan; see
+[docs/windows.md](docs/windows.md).
 
 ## Development
 
