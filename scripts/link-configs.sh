@@ -163,6 +163,30 @@ merge_gitconfig() {
   printf '    gitconfig %-55s (set user.name=%s, user.email=%s)\n' "$HOME/.gitconfig" "$name" "$email"
 }
 
+# Ensure the Co-Authored-By kill-switch is set in ~/.claude/settings.json
+# even when link_copy_if_absent preserved an existing file. Claude Code
+# (or its first-run init via `claude --version`) creates a default
+# settings.json before link-configs runs on a fresh machine, so the
+# copy-if-absent strategy alone doesn't get our captured kill-switch in.
+# This step merges `includeCoAuthoredBy: false` into whatever is on disk.
+# Idempotent: if the value is already false, no write.
+ensure_claude_co_authored_by_disabled() {
+  local f="$HOME/.claude/settings.json"
+  [[ -f "$f" ]] || return 0
+  if ! jq empty "$f" >/dev/null 2>&1; then
+    echo "    WARN: $f is invalid JSON — skipping kill-switch merge" >&2
+    return 0
+  fi
+  if jq -e 'has("includeCoAuthoredBy") and .includeCoAuthoredBy == false' "$f" >/dev/null 2>&1; then
+    printf '    co-author %-55s (kill-switch already set)\n' "$f"
+    return 0
+  fi
+  local tmp
+  tmp="$(mktemp)"
+  jq '.includeCoAuthoredBy = false' "$f" > "$tmp" && mv "$tmp" "$f"
+  printf '    co-author %-55s (merged includeCoAuthoredBy=false)\n' "$f"
+}
+
 # --- main -------------------------------------------------------------------
 
 echo "==> linking configs"
@@ -179,6 +203,7 @@ link_copy_if_absent configs/gemini/settings.json                  "$HOME/.gemini
 link_copy_if_absent configs/antigravity/argv.json                 "$HOME/.antigravity/argv.json"
 append_shell_additions
 merge_gitconfig
+ensure_claude_co_authored_by_disabled
 
 # --- post-check -------------------------------------------------------------
 

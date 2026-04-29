@@ -101,3 +101,8 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - docs/debian.md: Future work section rewritten — Reference Debian VM entry replaced by CI-verification pointer at .github/workflows/ci-tests.yml; new "Other Ubuntu / Debian releases" entry flags the shfmt-fallback CI gap.
 - "Update prior feat-debian-cli-support plan section" sub-step was a no-op — prior plan was overwritten; equivalent state lives in features.json + CHANGELOG.
 - Verified: 6 README + 6 docs/debian.md internal links resolve; anchor target exists.
+
+## /work — feat-ci-verification task 1 follow-up — 2026-04-28 (CI fixes)
+- install-apt.sh: install_keyring gains armored=0|1 param; NodeSource key piped through gpg --dearmor (root cause: NO_PUBKEY error in CI run 25087325478).
+- link-configs.sh: new ensure_claude_co_authored_by_disabled() merges includeCoAuthoredBy=false into ~/.claude/settings.json post-copy. Fixes Mac CI false-warn on fresh runners where Claude installer creates a default settings.json before our seed runs.
+- Verified: merge path adds key when missing; idempotent path skips when already set; Mac SKIP_APPS=1 verify-install reports 26 ok / 0 warn.

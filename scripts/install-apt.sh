@@ -75,14 +75,23 @@ ensure_keyrings_dir() {
 
 # Idempotently install a GPG keyring. Skips re-download if the file already
 # exists; the apt-repo verification chain catches any tampering anyway.
+#
+# Some upstream URLs (NodeSource at .gpg.key) serve an ASCII-armored key
+# while modern apt with `signed-by=...` expects dearmored binary form. Pass
+# armored=1 to pipe through `gpg --dearmor` before writing. URLs that
+# already serve binary (GitHub CLI's .gpg) use the default armored=0.
 install_keyring() {
-  local url="$1" dest="$2"
+  local url="$1" dest="$2" armored="${3:-0}"
   if [[ -f "$dest" ]]; then
     printf '    %-30s already present\n' "$(basename "$dest")"
     return 0
   fi
   printf '    %-30s downloading\n' "$(basename "$dest")"
-  curl -fsSL "$url" | $SUDO tee "$dest" >/dev/null
+  if [[ "$armored" == "1" ]]; then
+    curl -fsSL "$url" | gpg --dearmor | $SUDO tee "$dest" >/dev/null
+  else
+    curl -fsSL "$url" | $SUDO tee "$dest" >/dev/null
+  fi
   $SUDO chmod 0644 "$dest"
 }
 
@@ -126,13 +135,15 @@ ensure_keyrings_dir
 # --- 2. NodeSource (Node.js 22 LTS) -----------------------------------------
 
 echo "==> NodeSource (node 22 LTS)"
-install_keyring "$NODESOURCE_KEY_URL" /etc/apt/keyrings/nodesource.gpg
+# NodeSource serves the key ASCII-armored (.gpg.key URL); dearmor before write.
+install_keyring "$NODESOURCE_KEY_URL" /etc/apt/keyrings/nodesource.gpg 1
 install_sources_line "$NODESOURCE_REPO_LINE" /etc/apt/sources.list.d/nodesource.list
 
 # --- 3. GitHub CLI ----------------------------------------------------------
 
 echo "==> GitHub CLI apt repo"
-install_keyring "$GH_KEY_URL" /etc/apt/keyrings/githubcli-archive-keyring.gpg
+# GitHub serves the key already binary; no dearmor.
+install_keyring "$GH_KEY_URL" /etc/apt/keyrings/githubcli-archive-keyring.gpg 0
 gh_arch="$(dpkg --print-architecture)"
 gh_repo_line="deb [arch=${gh_arch} signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main"
 install_sources_line "$gh_repo_line" /etc/apt/sources.list.d/github-cli.list
