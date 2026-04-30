@@ -78,7 +78,7 @@ A user on a fresh Mac, Debian, or Windows host installs the full dev environment
   - Prints the extract dir on exit so the user can re-run / clean up.
   - `set -euo pipefail`; clear error message on any failure.
 - **Verification:** **CI:** `static-analysis` job's `shellcheck install.sh` step. Each matrix job (`macos-test`, `ubuntu-test`) gains a step: `curl -fsSL https://raw.githubusercontent.com/alexherrero/dev-machine-setup/main/install.sh | bash -s -- --dry-run` exits 0 and prints the stage list.
-- **Status:** [ ]
+- **Status:** [x] (2026-04-30: install.sh added at repo root. Two iterations to land green: (1) initial JSON-API approach hit HTTP 403 on macos-latest from the unauth rate limit (60/hr per IP shared across runner pool — exactly the case flagged as plan open question 2); (2) switched to the `/releases/latest` HTML-redirect Location-header parse (no rate limit; same pattern as install-apt.sh's shfmt fallback). curl uses `-fsSI`, wget uses `-S --max-redirect=0 --spider`. CI verified green on run 25169301931 — bootstrap-from-curl steps in macos-test and ubuntu-test both exit 0 with v2.0.0's setup.sh stage list. install.sh@main → setup.sh@v2.0.0 coupling resolves when v3.0.0 ships in task 10. Documenter dispatched: confirmed all three pending wiki pages stay pending until task 6 (install.ps1) lands — flipping after only half the bootstrap pair would mislead readers.)
 
 ### 6. `install.ps1` — Windows bootstrap
 

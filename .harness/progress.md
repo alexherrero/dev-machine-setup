@@ -227,3 +227,10 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - CHANGELOG [Unreleased] section added: visibility flip + LICENSE + static-analysis.
 - Re-dispatch CI to confirm post-flip jobs still green.
 - Next: /work task 5 (install.sh POSIX bootstrap).
+
+## /work — feat-curl-bash-installer task 5 — 2026-04-30T13:56:14Z (install.sh CI green)
+- install.sh added: bash bootstrap. curl/wget; HTML-redirect tag parse (no API rate limit); mktemp -d → tarball → extract → exec setup.sh "$@".
+- 2 iterations to land green: (1) macos-latest hit HTTP 403 on the JSON API; (2) switched to /releases/latest redirect (resolved).
+- CI green on run 25169301931: 4/4 jobs incl. bootstrap-from-curl on Mac + Ubuntu.
+- Documenter: all 3 pending wiki pages held pending until task 6 (install.ps1) — atomic flip with the Windows mirror.
+- Next: /work task 6 (install.ps1).
