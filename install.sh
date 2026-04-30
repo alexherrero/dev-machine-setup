@@ -18,7 +18,7 @@
 set -euo pipefail
 
 REPO="alexherrero/dev-machine-setup"
-API_URL="https://api.github.com/repos/${REPO}/releases/latest"
+LATEST_URL="https://github.com/${REPO}/releases/latest"
 
 die() {
   printf 'install.sh: %s\n' "$*" >&2
@@ -29,21 +29,43 @@ die() {
 # every supported macOS and on most Debian/Ubuntu hosts. wget is the
 # fallback for stripped-down container images.
 if command -v curl >/dev/null 2>&1; then
-  fetch() { curl -fsSL "$1"; }
+  # -fsSI for HEAD-only fetch of headers (used to read the redirect
+  # Location). Note: -f makes curl exit non-zero on >=400 but we want
+  # to capture the 302 — curl treats redirects as success when not
+  # following, so -f is fine here.
+  fetch_headers() { curl -fsSI "$1"; }
   fetch_to() { curl -fsSL -o "$2" "$1"; }
 elif command -v wget >/dev/null 2>&1; then
-  fetch() { wget -qO- "$1"; }
+  # wget -S prints headers to stderr; --max-redirect=0 makes it stop
+  # at the first 302 instead of following.
+  fetch_headers() { wget -S --max-redirect=0 --spider "$1" 2>&1 || true; }
   fetch_to() { wget -qO "$2" "$1"; }
 else
   die "neither curl nor wget is on PATH — install one and retry"
 fi
 
-# Resolve the latest release tag without depending on jq. The Releases
-# API returns JSON; we grep for the first `"tag_name": "vX.Y.Z"` line
-# and slice. Mirrors the shfmt-fallback pattern used in install-apt.sh.
-echo "==> Resolving latest release tag from ${API_URL}"
-TAG="$(fetch "$API_URL" | grep -m1 '"tag_name"' | sed -E 's/.*"tag_name"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
-[[ -n "${TAG}" ]] || die "could not parse tag_name from releases/latest API response"
+# Resolve the latest release tag by reading the Location header of the
+# /releases/latest HTML redirect — *not* the JSON API. The API endpoint
+# is rate-limited to 60 unauth requests/hr per IP and CI runners on
+# shared NATs hit it routinely (HTTP 403). The HTML redirect has no
+# such limit and is the same pattern we use for the shfmt fallback in
+# install-apt.sh and the Anthropic docs use for claude.ai/install.sh.
+#
+#   HEAD https://github.com/<owner>/<repo>/releases/latest
+#     → 302 Location: .../releases/tag/vX.Y.Z
+#
+# The trailing slash on `releases/tag/` is the only stable separator;
+# strip everything up to and including it, then take the first token.
+echo "==> Resolving latest release tag from ${LATEST_URL}"
+TAG="$(
+  fetch_headers "$LATEST_URL" \
+    | tr -d '\r' \
+    | grep -i '^location:' \
+    | sed -E 's|.*/releases/tag/||' \
+    | head -1 \
+    | tr -d '[:space:]'
+)"
+[[ -n "${TAG}" ]] || die "could not parse tag from /releases/latest redirect"
 echo "==> Latest release: ${TAG}"
 
 # GitHub strips the leading 'v' from tag in the tarball directory name:
