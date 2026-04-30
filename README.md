@@ -82,21 +82,21 @@ Mac-only GUI sign-ins).
 **Mac:** ready (full GUI + CLI install path).
 **Debian / Ubuntu:** ready (CLI-only). See [docs/debian.md](docs/debian.md)
 for the supported-distro matrix.
-**Windows:** deferred. `setup.ps1` and the per-stage `.ps1` files exist
-as stubs (matching the Mac shape) so the orchestrator's flag surface
-stays coherent across platforms; real Windows work happens against a
-reference VM in a future plan. See [docs/windows.md](docs/windows.md).
+**Windows:** ready (full GUI + CLI, mirrors Mac scope). winget for
+toolchain + Claude Code + Antigravity Desktop + Claude Desktop, npm for
+Gemini. Codex skip-with-warn (upstream npm broken on Windows). See
+[docs/windows.md](docs/windows.md).
 
 ## Testing
 
 CI is **manually dispatched** — no auto-runs on push or PR. The
-[`ci-tests.yml`](.github/workflows/ci-tests.yml) workflow runs `setup.sh`
-end-to-end on a fresh `macos-latest` runner (`--skip-apps`, since the
-GUI installer needs a human) and a fresh `ubuntu-latest` runner (full
-Debian path), plus a Windows smoke job that verifies `setup.ps1` runs
-its stubs cleanly and every `.ps1` parses. Each platform's job asserts
-`verify-install` reports zero warns and that a re-run produces no repo
-drift.
+[`ci-tests.yml`](.github/workflows/ci-tests.yml) workflow runs the full
+install pipeline on three fresh runners: `macos-latest` (`--skip-apps`,
+since the Mac GUI installer needs a human), `ubuntu-latest` (full
+Debian path, no GUI apps in scope), and `windows-latest`
+(`-SkipApps`, full toolchain + CLIs + the Codex-skipped invariant).
+Each platform's job asserts `verify-install` reports zero warns and
+that a re-run produces no repo drift.
 
 To dispatch:
 
@@ -106,9 +106,7 @@ To dispatch:
 3. Click **Run workflow** → **Run workflow** (default branch `main`).
 
 Concurrency is `cancel-in-progress`: dispatching again while a run is
-active supersedes the older one. Real Windows install verification
-(beyond smoke) is the immediate next plan; see
-[docs/windows.md](docs/windows.md).
+active supersedes the older one.
 
 ## Development
 

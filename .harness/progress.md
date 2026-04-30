@@ -180,3 +180,10 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - ci-tests.yml windows-test: smoke → real install pipeline.
 - Five CI iterations to land green: Write-Host capture, $Desc: parse error, two PATH-from-registry refresh sites (setup.ps1 stage loop + verify-install step), verify.out drift fix.
 - Run 25142962483: all three jobs green simultaneously.
+
+## /work — feat-windows-cli-support task 9 — 2026-04-29 (CLOSE-OUT)
+- docs/windows.md: rewritten. Drops "deferred/TODO" framing. Quick-start, supported-version table, Codex/winget-vs-native/Dev-Mode-symlink/MSIX-mess sections, file layout, future work, references.
+- README: Windows status flipped to ready. Testing section drops the smoke framing.
+- features.json: feat-windows-cli-support.passes = true. All three features now pass.
+- PLAN.md plan-level Status: complete.
+- Next: v2.0.0 release.

@@ -1,53 +1,159 @@
 # Windows support
 
-The Windows implementation of `setup.sh` is **deferred**. The `.ps1`
-files in this repo are parseable skeletons with the same stage
-structure as the Mac scripts — each prints its stage banner followed
-by `TODO: implement on Windows reference VM` and exits 0.
+CLI-and-GUI scope, mirroring Mac. `setup.ps1` on a fresh Windows 10/11
+host installs the toolchain (Git for Windows, Node LTS, gh, ripgrep —
+all via winget), the CLI agents (Claude Code via winget, Gemini CLI via
+npm), and the GUI apps (Antigravity Desktop + Claude Desktop via
+winget). Configs are placed at Windows-native paths
+(`%USERPROFILE%\.claude\`, `%USERPROFILE%\.gemini\`, etc.).
 
-## Why deferred
+## Quick start
 
-- Each vendor's Windows installer is shaped differently (winget IDs,
-  `Setup.exe`, MSIX, MSI, curl-to-installer) — verifying every path
-  needs a clean Windows reference VM, which we haven't wired up.
-- macOS is the primary dev surface today. Shipping a half-tested
-  Windows bootstrap is worse than an honest stub that refuses to lie.
-- Several behaviors need real-OS validation before they can be
-  scripted: symlink creation (Developer Mode / admin), SmartScreen
-  "Mark-of-the-Web" handling (equivalent of `xattr -d com.apple.quarantine`),
-  and whether each app respects `%APPDATA%` or `%LOCALAPPDATA%`.
+```powershell
+git clone git@github.com:alexherrero/dev-machine-setup.git
+cd dev-machine-setup
+./setup.ps1 -Help                     # prints the 6-stage list
+./setup.ps1                           # end-to-end (Antigravity + Claude Desktop install)
+./setup.ps1 -SkipApps                 # CLI-only, no GUI installs (CI / headless)
+./setup.ps1 -WithCodex                # opt in to Codex CLI (note: skip-with-warn on Windows)
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+```
 
-## What exists today
+The PATH-refresh one-liner at the end picks up the registry-PATH writes
+that winget made — same idea as `source ~/.zshrc` on Unix. New shells
+inherit the user-PATH automatically; only the running shell needs the
+explicit refresh.
 
-- [setup.ps1](../setup.ps1) — orchestrator with the same stage list as
-  [setup.sh](../setup.sh) (`brew → clis → gui-apps → link-configs →
-  auth-checklist`) and the same flag shape (`-DryRun`, `-SkipApps`,
-  `-Only <stage>`, `-Help`).
-- [scripts/install-brew.ps1](../scripts/install-brew.ps1),
-  [scripts/install-clis.ps1](../scripts/install-clis.ps1),
-  [scripts/install-gui-apps.ps1](../scripts/install-gui-apps.ps1),
-  [scripts/link-configs.ps1](../scripts/link-configs.ps1),
-  [scripts/auth-checklist.ps1](../scripts/auth-checklist.ps1) — one
-  stub per stage. Each prints its stage banner + TODO + exits 0 so the
-  orchestrator walks through the full plan predictably.
-- [.harness/verify.sh](../.harness/verify.sh) — parses every `.ps1`
-  under the PowerShell AST when `pwsh` is installed; no-ops otherwise,
-  matching today's macOS dev surface.
+## Supported
 
-## What still needs to be built
-
-| Stage | Remaining work |
+| Component | Status |
 | --- | --- |
-| `install-brew.ps1` | Decide on winget vs. Chocolatey for the equivalents of `node` / `gh` / `jq` / `ripgrep` / `shellcheck` / `shfmt`. `gh` and `jq` have first-party winget manifests; the rest need to be confirmed. |
-| `install-clis.ps1` | Locate Anthropic's Windows-side installer for Claude Code (or fall back to an npm-global). Gemini CLI (`@google/gemini-cli`) is identical to the macOS path once node is on PATH. |
-| `install-gui-apps.ps1` | Resolve winget IDs for Antigravity, Gemini Desktop, Claude Desktop; if missing, port the browser-assisted shape from [install-gui-apps.sh](../scripts/install-gui-apps.sh) — open download URL, poll install dir, strip MOTW. |
-| `link-configs.ps1` | Map each captured config to its Windows path (`%USERPROFILE%\.claude\...`, `%APPDATA%\Claude\...`, `%USERPROFILE%\.gemini\...`). Use `New-Item -ItemType SymbolicLink` where the macOS version symlinks (requires Developer Mode enabled). Keep copy-if-absent for the tool-owned JSONs. Port the `~/.zshrc` marker-block append to `$PROFILE`. |
-| `auth-checklist.ps1` | Near-verbatim port of [auth-checklist.sh](../scripts/auth-checklist.sh). |
-| `scripts/capture.ps1` (new) | Not listed in the current PLAN, but a Windows equivalent of [capture.sh](../scripts/capture.sh) will be needed so the reference-machine capture loop works on both platforms. |
+| Windows 10 1809+ (winget pre-installed) | supported |
+| Windows 11 | supported |
+| PowerShell 7+ (`pwsh`) | required (Windows PowerShell 5.1 likely works for most stages but isn't routinely tested) |
+| amd64 / arm64 | both work via winget's per-arch resolution |
 
-## Why keep the skeletons in the repo?
+CI runs `./setup.ps1 -SkipApps` end-to-end on `windows-latest` whenever
+the workflow is dispatched — see
+[.github/workflows/ci-tests.yml](../.github/workflows/ci-tests.yml).
 
-The project's stated contract is cross-platform. Keeping the `.ps1`
-structure in place means adding Windows support later is a matter of
-filling in bodies, not redesigning the orchestrator shape or retrofitting
-a parallel directory tree.
+## Stage list
+
+```
+tooling          winget Git for Windows + Node LTS + gh + ripgrep
+clis             Claude Code (winget) + Gemini CLI (npm); Codex skip-with-warn
+gui-apps         Antigravity Desktop + Claude Desktop (winget)
+link-configs     Place captured configs at Windows OS locations
+verify-install   Warn-only post-setup health check
+auth-checklist   Print the manual auth steps
+```
+
+## Codex on Windows
+
+OpenAI Codex CLI is **not installed on Windows in this scope**, even
+when `-WithCodex` is passed. The `@openai/codex` npm package is
+currently broken on Windows — the per-platform native binary (`@openai/codex-win32-x64`)
+isn't published as expected, so npm resolves a stale binary. See
+[openai/codex#18648](https://github.com/openai/codex/issues/18648) and
+[#11744](https://github.com/openai/codex/issues/11744). Mac and Linux
+still install Codex normally. Revisit when upstream fixes the package.
+
+`-WithCodex` is still honored as a signal of intent — the user-facing
+checklist and verifier produce different messages so users know whether
+they asked for Codex or not.
+
+## Claude Code: winget vs native installer
+
+This setup uses `winget install Anthropic.ClaudeCode`. The Anthropic
+docs also offer a native PowerShell installer
+(`irm https://claude.ai/install.ps1 | iex`) that drops the binary at
+`%USERPROFILE%\.local\bin\claude.exe` and **auto-updates in the
+background**. Trade-offs:
+
+- **winget (this repo's default)**: system-managed, no auto-update.
+  User runs `winget upgrade Anthropic.ClaudeCode` periodically.
+- **Native installer**: auto-updates. Symmetric with the Mac/Linux
+  `claude.ai/install.sh` model.
+
+Installing both at once is a documented footgun
+([claude-code#31980](https://github.com/anthropics/claude-code/issues/31980))
+because they land at different paths and don't dedupe. Pick one.
+
+## Symlink for `CLAUDE.md`
+
+`link-configs.ps1` symlinks `%USERPROFILE%\.claude\CLAUDE.md` to the
+repo's `configs\claude\CLAUDE.md` so edits sync both ways. On Windows,
+unprivileged symlinks require **either admin OR Developer Mode**
+enabled. The script tries `New-Item -ItemType SymbolicLink` first; on
+`UnauthorizedAccessException` it falls back to `Copy-Item` and prints a
+warning that repo edits won't auto-sync.
+
+To get symlinks working without admin: open Settings → Privacy &
+security → For developers → Developer Mode → toggle **on**. Then
+re-run `setup.ps1` (or just the link-configs stage:
+`./setup.ps1 -Only link-configs`).
+
+## What this script does NOT do
+
+- **Manage `claude_desktop_config.json`.** The MSIX install of Claude
+  Desktop redirects `%APPDATA%\Claude\` to a virtualized location
+  under `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\`,
+  while the Electron "Edit Config" button bypasses the redirect. You
+  can end up with two configs and silent MCP-server failures
+  ([claude-code#26073](https://github.com/anthropics/claude-code/issues/26073)).
+  v1 of Windows GUI support punts: the user manages this config via
+  Claude Desktop's UI. If you need MCP server config, edit through the
+  app rather than dropping a file in the seemingly-canonical path.
+- **Install Gemini Desktop.** No first-party Windows app exists.
+  Community Electron wrappers (`bwendell/gemini-desktop`,
+  `dortanes/gemini-desktop`) are out of scope. Use the Gemini CLI
+  (which IS installed) or Gemini in the browser.
+- **Install Codex CLI.** See above.
+- **Capture live Windows configs back to the repo.** No
+  `scripts\capture.ps1` Windows variant in this scope. The current
+  configs come from a Mac reference machine; Windows installs use
+  those same platform-agnostic JSONs.
+
+## File layout
+
+```
+setup.ps1                    Top-level orchestrator
+scripts\install-tooling.ps1  winget toolchain (Git, Node LTS, gh, ripgrep)
+scripts\install-clis.ps1     Claude (winget) + Gemini (npm) + Codex (skip)
+scripts\install-gui-apps.ps1 Antigravity + Claude Desktop (winget)
+scripts\link-configs.ps1     Place captured configs at Windows paths
+scripts\verify-install.ps1   Warn-only post-setup health check
+scripts\auth-checklist.ps1   Print manual auth steps
+```
+
+## Future work
+
+- **Antigravity `argv.json` path**: currently placed at
+  `%USERPROFILE%\.antigravity\argv.json` (VSCode-fork convention) on
+  the assumption that Antigravity follows VSCode. Google's docs only
+  confirm `%APPDATA%\Antigravity\` for auth-tokens and Cache; if
+  Antigravity uses a different argv.json path on Windows, the seeded
+  file is a stray no-op. Empirical verification welcome.
+- **Codex CLI** when upstream fixes the npm package, or via the
+  GitHub-Release `codex-x86_64-pc-windows-msvc.tar.gz` fallback (out
+  of scope for v1).
+- **Claude Desktop config management** when the MSIX-redirect
+  duality lands a documented stable path.
+- **Gemini Desktop** if Google ever ships a first-party standalone
+  Windows app.
+- **`scripts\capture.ps1`** for re-syncing live Windows configs into
+  the repo. Useful if a user wants to capture from a Windows reference
+  machine; not blocking since the existing Mac-captured configs are
+  platform-agnostic.
+
+## Reference
+
+- [first-run.md](first-run.md) — manual auth checklist (claude login,
+  gh auth login, etc.).
+- [debian.md](debian.md) — Debian/Ubuntu CLI-only path (no GUI apps).
+- [.harness/PLAN.md](../.harness/PLAN.md) — `feat-windows-cli-support`
+  task list.
+- [scripts/install-tooling.ps1](../scripts/install-tooling.ps1) — winget
+  toolchain installer.
+- [scripts/install-clis.ps1](../scripts/install-clis.ps1) — CLI agent
+  installer.

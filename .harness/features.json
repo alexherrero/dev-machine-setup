@@ -43,19 +43,19 @@
     },
     {
       "id": "feat-windows-cli-support",
-      "description": "Real Windows install verification — replaces the smoke-only Windows job from feat-ci-verification with a full install pipeline. Windows scope matches Mac (full GUI + CLI: Antigravity Desktop + Claude Desktop installed via winget; Gemini Desktop has no first-party app, skipped). winget for toolchain (Git, Node LTS, gh, ripgrep). Claude Code via native PowerShell installer; Gemini via npm; Codex skipped on Windows (upstream npm packaging bugs). v1.1.0 ships when ci-tests.yml windows-test job goes green end-to-end.",
+      "description": "Real Windows install verification — replaces the smoke-only Windows job from feat-ci-verification with a full install pipeline. Windows scope matches Mac (full GUI + CLI: Antigravity Desktop + Claude Desktop installed via winget; Gemini Desktop has no first-party app, skipped). winget for toolchain (Git, Node LTS, gh, ripgrep) + Claude Code; Gemini via npm; Codex skipped on Windows (upstream npm packaging bugs). End-to-end CI-verified on ci-tests.yml windows-test (run 25142962483).",
       "steps": [
         "scripts/install-tooling.ps1 — winget Git + Node LTS + gh + ripgrep",
-        "scripts/install-clis.ps1 — Claude native installer + Gemini npm; Codex skip-with-warn",
+        "scripts/install-clis.ps1 — Claude winget + Gemini npm; Codex skip-with-warn",
         "scripts/install-gui-apps.ps1 — winget Antigravity + Claude Desktop",
         "scripts/link-configs.ps1 — symlink-with-copy-fallback CLAUDE.md, Windows-native paths, Co-Authored-By kill-switch merge",
         "scripts/verify-install.ps1 — Windows post-setup health check",
         "scripts/auth-checklist.ps1 — Windows manual auth steps",
-        "setup.ps1 — orchestrator wiring + --with-codex flag",
+        "setup.ps1 — orchestrator wiring + -WithCodex flag",
         "ci-tests.yml windows-test upgraded from smoke to real install pipeline",
-        "docs/windows.md rewrite + README + close out features.passes=true; v1.1.0"
+        "docs/windows.md rewrite + README + close out features.passes=true; v2.0.0"
       ],
-      "passes": false
+      "passes": true
     }
   ]
 }

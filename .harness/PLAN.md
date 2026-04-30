@@ -1,6 +1,6 @@
 # Plan: Real Windows CLI + GUI install support (feat-windows-cli-support)
 
-**Status:** in progress (2026-04-29 — three open questions resolved: Codex skip-with-warn, Claude Code via winget, Antigravity argv.json verify-empirically-then-fall-back-to-skip).
+**Status:** complete (2026-04-29 — all 9 tasks `[x]`; CI-verified green on run 25142962483; v2.0.0 ships next).
 **Brief:** Replace the smoke-only Windows job in `ci-tests.yml` with real install verification. Windows matches **Mac scope** (full GUI + CLI: Antigravity Desktop + Claude Desktop), not Debian's CLI-only scope. The smoke job from `feat-ci-verification` (orchestrator runs cleanly + AST parse) gets upgraded to a real install pipeline that exercises every stage script.
 
 ## Goal
@@ -126,7 +126,7 @@
   - **README**: Status section flipped from "Windows: deferred" to "Windows: ready (full GUI + CLI, full parity with Mac)". Layout block updated to reflect real .ps1 scripts. New Windows row in the badges line if a per-platform CI job badge exists, otherwise the existing CI badge covers all three jobs.
   - **`features.json` close-out** *(after CI green)*: `feat-windows-cli-support.passes` → `true`. v1.1.0 release (minor bump — additive, no breaking changes from v1.0.0).
 - **Verification:** `docs/windows.md` exists and references all 6 .ps1 stage files; broken-link check via the same grep + find pattern as the prior plan. README shows the three platforms ready/ready/ready (or ready/ready/CLI-only-on-Linux/ready). `features.json` valid; `feat-windows-cli-support.passes == true`. v1.1.0 tagged + released.
-- **Status:** [ ]
+- **Status:** [x] (2026-04-29: docs/windows.md rewritten — drops the "deferred / TODO stubs" framing entirely. New content: quick-start with `-WithCodex` variant, supported-Windows-version table (Windows 10 1809+, Windows 11, PowerShell 7+, amd64+arm64), stage list, Codex-not-supported-yet section citing openai/codex#18648 and #11744, winget-vs-native-installer trade-off note for Claude Code with the dedupe-footgun warning (claude-code#31980), Developer-Mode-symlink toggle instructions, MSIX-redirect-mess Claude Desktop config rationale (claude-code#26073), Gemini Desktop "no first-party app" justification, file layout, future-work pointers (Antigravity argv.json empirical, Codex when fixed, capture.ps1, etc.), reference links. README Status section flipped Windows from "deferred" to "ready (full GUI + CLI, mirrors Mac scope)". README Testing section rewritten: drops the "Windows smoke" framing and the "Real Windows install verification (beyond smoke) is the immediate next plan" paragraph since that next plan is now this complete plan. features.json: feat-windows-cli-support.passes flipped to true. PLAN.md plan-level Status: in progress → complete. v2.0.0 ships next — major bump because the Windows path going from smoke-only to fully install-verified is a breaking change in user expectations (users on v1.x with Windows would have hit the stubs, which printed TODO and exited 0; on v2.0.0 they hit the real installer that actually does work).)
 
 ## Risks / open questions
 
