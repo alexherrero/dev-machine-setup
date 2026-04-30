@@ -104,7 +104,7 @@ A user on a fresh Mac, Debian, or Windows host installs the full dev environment
   - **License** section.
   - Drop: agentic-harness internal references at this level (move to a sub-doc); `Layout` ASCII tree (move to docs/architecture.md or similar).
 - **Verification:** **CI:** `static-analysis` job's `lychee` step passes (no broken links). New `readme-shape` step in `static-analysis` greps for required sections (badge block, Install, Quick start, License).
-- **Status:** [ ]
+- **Status:** [x] (2026-04-30: README.md rewritten end-to-end in converge style — centered title + 3-badge block (CI tests / License: MIT / Latest release) + decorative Claude/Gemini/Antigravity badges on second line; ## Install with curl|bash + irm|iex one-liners + git clone alternative; ## Quick start 3 numbered steps; ## What gets installed Component | Mac | Linux | Windows | Source table including Codex-skip-on-Windows caveat; ## Stages Stage | Description table; ## Flags POSIX | Windows | Effect table; ## Documentation Doc | Description table; ## Testing Job | Runner | What table updated for the 4-job matrix; ## License. Cut content moved to new docs/architecture.md (repo layout ASCII tree refreshed with install.sh / install.ps1 / *.ps1 sibling scripts; OS-dispatch arch diagram with Windows row; trade-off rationale; agentic-harness Development pointer). New `readme-shape` static-analysis step greps for 10 required patterns (badge block, headings, one-liners). CI green on first dispatch — run 25170296627, all four jobs. Documenter dispatched: no wiki changes; flagged that wiki/explanation/Dev-Machine-Setup-Design.md's Shape table is missing a Windows row — deferred to task 8 (wiki polish) rather than expanding task 7 scope.)
 
 ### 8. Wiki + docs/ public polish
 

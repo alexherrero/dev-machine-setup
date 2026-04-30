@@ -241,3 +241,11 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - CI green on first dispatch (run 25169710091): 4/4 jobs incl. bootstrap-from-iwr on Windows.
 - Documenter flipped 3 pending wiki pages to implemented (Public-Curl-Bash-Installer, Install-Via-One-Liner, Scripts.md) — bootstrap pair complete.
 - Next: /work task 7 (README rewrite in converge style).
+
+## /work — feat-curl-bash-installer task 7 — 2026-04-30T23:41:11Z (README rewrite CI green)
+- README.md rewritten in converge style: centered title + badges, ## Install (one-liners first), Quick start, tables for What gets installed / Stages / Flags / Documentation / Testing.
+- docs/architecture.md added (cut content: Layout tree, OS-dispatch arch, trade-offs, agentic-harness pointer).
+- New readme-shape CI step (10 grep checks) catches accidental section-rename / badge-removal in PRs.
+- CI green on first dispatch (run 25170296627): 4/4 jobs.
+- Documenter flagged wiki/explanation/Dev-Machine-Setup-Design.md missing Windows row → deferred to task 8.
+- Next: /work task 8 (wiki + docs polish).
