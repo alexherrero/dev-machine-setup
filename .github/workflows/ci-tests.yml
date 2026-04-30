@@ -168,8 +168,13 @@ jobs:
           # at service start, before our winget calls). Without this refresh,
           # rg + claude would WARN even though they were installed.
           $env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User')
-          ./scripts/verify-install.ps1 6>&1 | Tee-Object -FilePath verify.out
-          if (-not (Select-String -Path verify.out -Pattern 'summary:.*0 warn' -Quiet)) {
+          # Tee to RUNNER_TEMP, not the repo working dir — otherwise the
+          # untracked `verify.out` shows up in `git status` during the next
+          # step's idempotency check (mirrors the Mac/Linux jobs writing to
+          # /tmp/verify.out).
+          $verifyOut = Join-Path $env:RUNNER_TEMP 'verify.out'
+          ./scripts/verify-install.ps1 6>&1 | Tee-Object -FilePath $verifyOut
+          if (-not (Select-String -Path $verifyOut -Pattern 'summary:.*0 warn' -Quiet)) {
             Write-Error "verify-install reported warns; expected 0"
             exit 1
           }
