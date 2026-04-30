@@ -14,6 +14,121 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # --- Static analysis: shellcheck / actionlint / pwsh AST / lychee / audit --
+  #
+  # Catches structural issues across all .sh, .ps1, .yml, .md files without
+  # spinning up a full install runner. The "static gate" referenced by every
+  # other CI job and every task in feat-curl-bash-installer. Runs on
+  # ubuntu-latest for speed and to take advantage of pre-installed shellcheck
+  # + pwsh.
+  static-analysis:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: shellcheck — lint all .sh files
+        run: |
+          shellcheck --version
+          # -x follows `source` statements; every script that sources lib/os.sh
+          # already has a `# shellcheck source=scripts/lib/os.sh` annotation,
+          # so cross-file checks resolve without SC1091 noise.
+          find . -type f -name '*.sh' -not -path './.git/*' -print0 \
+            | xargs -0 shellcheck -x
+
+      - name: actionlint — validate workflow YAML
+        run: |
+          # Self-contained download of the actionlint binary into the runner —
+          # avoids a third-party action dependency.
+          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
+
+      - name: pwsh AST parse — validate all .ps1 files
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem -Recurse -Filter *.ps1
+          if ($files.Count -eq 0) {
+            Write-Error "no .ps1 files found"
+            exit 1
+          }
+          $failed = @()
+          foreach ($f in $files) {
+            $errs = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile(
+              $f.FullName, [ref]$null, [ref]$errs)
+            if ($errs) {
+              Write-Host "PARSE ERROR in $($f.FullName):"
+              $errs | ForEach-Object { Write-Host "  $_" }
+              $failed += $f.FullName
+            } else {
+              Write-Host "OK: $($f.FullName)"
+            }
+          }
+          if ($failed.Count -gt 0) {
+            Write-Error "AST parse errors in $($failed.Count) of $($files.Count) files"
+            exit 1
+          }
+          Write-Host "$($files.Count) .ps1 files parsed cleanly"
+
+      - name: lychee — internal markdown link check
+        # Excludes external http(s) URLs to avoid flaky third-party
+        # rate-limits; v1 only gates internal cross-links between .md files
+        # in this repo. External-link verification stays a manual
+        # release-time concern.
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --exclude "^https?://" "**/*.md"
+          fail: true
+
+      - name: audit — secret-shaped + personal-data scan
+        # Mirrors the manual task-1 audit so future PRs are gated:
+        # (1) API-key shapes — AWS, Stripe, GitHub PAT, Slack, Google OAuth, JWT.
+        # (2) Maintainer's personal (non-noreply) email — should never appear.
+        # (3) Hardcoded /Users/alex/ paths — use //Users/*/ glob instead.
+        #
+        # Exclusions:
+        # - workflows/ dir: this audit step's regex contains literal pattern
+        #   substrings (xoxb-, xoxp-, ya29., eyJ, /Users/alex/) that would
+        #   self-match. Workflow YAML is independently linted by actionlint
+        #   and reviewed manually for hardcoded keys.
+        # - PLAN.md / progress.md / CHANGELOG.md: legitimately reference the
+        #   historical leak in narrative form (excluded only for the path scan).
+        run: |
+          set -e
+          if grep -rIinE '\b(AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|sk_live_[0-9a-zA-Z]{24,}|pk_live_[0-9a-zA-Z]{24,}|gh[pousr]_[0-9a-zA-Z]{36,}|xoxb-|xoxp-|ya29\.|eyJ[A-Za-z0-9_-]{10,}\.eyJ)' \
+               --exclude-dir='.git' --exclude-dir='workflows' . ; then
+            echo "FAIL: secret-shaped strings detected"
+            exit 1
+          fi
+          if grep -rIn 'alexmherrero@gmail\.com' \
+               --exclude-dir='.git' --exclude-dir='workflows' \
+               --exclude=PLAN.md --exclude=progress.md --exclude=CHANGELOG.md . ; then
+            echo "FAIL: personal email (non-noreply) found"
+            exit 1
+          fi
+          hits=$(grep -rIn '/Users/alex/' \
+                 --exclude-dir='.git' --exclude-dir='workflows' \
+                 --exclude=PLAN.md --exclude=progress.md --exclude=CHANGELOG.md . || true)
+          if [[ -n "$hits" ]]; then
+            echo "FAIL: hardcoded /Users/alex/ paths found (use //Users/*/ glob):"
+            echo "$hits"
+            exit 1
+          fi
+          echo "OK: no API-key-shaped strings, personal email, or hardcoded user paths"
+
+      - name: LICENSE present and non-empty
+        run: |
+          if [[ ! -f LICENSE ]]; then
+            echo "FAIL: LICENSE file missing"
+            exit 1
+          fi
+          if [[ ! -s LICENSE ]]; then
+            echo "FAIL: LICENSE file empty"
+            exit 1
+          fi
+          echo "OK: LICENSE present and non-empty"
+
   # --- macOS: full Mac pipeline minus GUI apps -------------------------------
   #
   # GUI installer (install-gui-apps.sh) is browser-assisted and can't run in
