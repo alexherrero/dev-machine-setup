@@ -176,11 +176,17 @@ jobs:
 
       - name: idempotency — re-run produces no repo drift
         run: |
+          $env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User')
           ./setup.ps1 -SkipApps
-          $changed = git status --porcelain
-          if ($changed) {
-            Write-Error "FAIL: re-run produced repo drift:"
-            Write-Host $changed
+          $diff = git status --porcelain
+          if ($diff) {
+            Write-Host "FAIL: re-run produced repo drift:"
+            Write-Host "--- git status --porcelain ---"
+            Write-Host $diff
+            Write-Host "--- git status (verbose) ---"
+            git status
+            Write-Host "--- git diff ---"
+            git diff
             exit 1
           }
 
