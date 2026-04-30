@@ -195,6 +195,15 @@ jobs:
           command -v codex
           codex --version
 
+      - name: bootstrap from curl|bash — install.sh --dry-run
+        # Exercises the full curl|bash path: fetch latest release, extract,
+        # run setup.sh --dry-run from the extracted tree. The released
+        # setup.sh is what users actually get; this couples the in-tree
+        # install.sh to the latest release's setup.sh until v3.0.0 ships.
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/alexherrero/dev-machine-setup/main/install.sh \
+            | bash -s -- --dry-run
+
   # --- Ubuntu: full Debian pipeline -----------------------------------------
   #
   # ubuntu-latest is currently 24.04 (Noble), where shfmt is in apt. The
@@ -246,6 +255,15 @@ jobs:
             exit 1
           fi
           echo "OK: ~/Library/Application Support/Claude was not created"
+
+      - name: bootstrap from curl|bash — install.sh --dry-run
+        # Same as the macOS bootstrap step. Runs the in-tree install.sh
+        # (fetched from raw.githubusercontent.com/main) which downloads
+        # the latest release tarball and execs setup.sh --dry-run. This
+        # validates the curl|bash path works on Linux without git.
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/alexherrero/dev-machine-setup/main/install.sh \
+            | bash -s -- --dry-run
 
   # --- Windows: full install pipeline ----------------------------------------
   #
