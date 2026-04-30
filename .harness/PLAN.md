@@ -89,7 +89,7 @@ A user on a fresh Mac, Debian, or Windows host installs the full dev environment
   - Cd's in, execs `& ./setup.ps1 @args` with splatted args.
   - `$ErrorActionPreference = 'Stop'`; print extract dir on exit.
 - **Verification:** **CI:** `static-analysis` job's pwsh-AST-parse step. `windows-test` job gains: `iwr -UseBasicParsing https://raw.githubusercontent.com/alexherrero/dev-machine-setup/main/install.ps1 | iex` followed by `setup.ps1 -Help` from the extract dir, exit 0.
-- **Status:** [ ]
+- **Status:** [x] (2026-04-30: install.ps1 added at repo root. Pre-applied task 5's lesson: uses /releases/latest HTML redirect Location header rather than the JSON API (no rate limit). [System.Net]-style 302 handling via try/catch on Invoke-WebRequest -MaximumRedirection 0. param() block declares -WithCodex / -SkipApps / -DryRun / -Help / -Only; forwards via @PSBoundParameters splatting. windows-test CI step uses temp-file pattern (download + run -DryRun) since `iwr | iex` doesn't naturally accept named params; both forms documented in install.ps1's .EXAMPLE blocks. CI green on first dispatch — run 25169710091, all four jobs. Documenter dispatched: flipped all three pending wiki pages (Public-Curl-Bash-Installer.md, Install-Via-One-Liner.md, Scripts.md) to Status: implemented; populated Steps / Variants / Verify / Troubleshooting / Reference tables with concrete one-liners and bootstrap details. Both halves of the bootstrap pair are now live.)
 
 ### 7. README rewrite (converge style)
 
