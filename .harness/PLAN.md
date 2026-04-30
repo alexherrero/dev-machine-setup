@@ -65,7 +65,7 @@ A user on a fresh Mac, Debian, or Windows host installs the full dev environment
 
 - **What:** Pure ceremony. Tasks 1–3 must be `[x]`. I show user the audit summary + the post-task-3 CI dispatch URL; user confirms; I run `gh repo edit alexherrero/dev-machine-setup --visibility public --accept-visibility-change-consequences`. CHANGELOG entry added.
 - **Verification:** **CI:** existing `static-analysis` + matrix jobs all green post-flip on a re-dispatch. Plus a one-time check: `curl -fsSL https://raw.githubusercontent.com/alexherrero/dev-machine-setup/main/README.md` succeeds without auth headers.
-- **Status:** [ ]
+- **Status:** [x] (2026-04-30: flipped via `gh repo edit alexherrero/dev-machine-setup --visibility public --accept-visibility-change-consequences`. `gh repo view --json visibility` returns `PUBLIC`. Three unauthenticated checks all pass: (1) `raw.githubusercontent.com` README.md fetch returns the file body, (2) `api.github.com/repos/.../releases/latest` returns v2.0.0 metadata, (3) source tarball download `archive/refs/tags/v2.0.0.tar.gz` returns 200 + 130KB. CHANGELOG.md `[Unreleased]` section added covering the visibility flip + LICENSE + static-analysis. Post-flip CI re-dispatch confirms all four jobs still green.)
 
 ### 5. `install.sh` — POSIX bootstrap
 

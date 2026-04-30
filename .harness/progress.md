@@ -220,3 +220,10 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - CI green on run 25150482876: static-analysis 12s + Mac 1m12s + Ubuntu 2m28s + Windows 2m48s.
 - The named gate every remaining task references is now in place.
 - Next: /work task 4 (visibility flip to public).
+
+## /work — feat-curl-bash-installer task 4 — 2026-04-30T06:24:05Z (PUBLIC)
+- Repo visibility flipped to PUBLIC via `gh repo edit ... --visibility public --accept-visibility-change-consequences`.
+- Three unauth checks pass: raw.githubusercontent.com README, releases/latest API, archive tarball download (200 / 130KB).
+- CHANGELOG [Unreleased] section added: visibility flip + LICENSE + static-analysis.
+- Re-dispatch CI to confirm post-flip jobs still green.
+- Next: /work task 5 (install.sh POSIX bootstrap).

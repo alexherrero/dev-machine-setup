@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Repository visibility flipped to public** (`feat-curl-bash-installer` task 4). Six-track pre-public audit (task 1) found 0 secrets in tree or git history, 0 API-key-shaped patterns; one hardcoded `/Users/alex/` path in the gitignored project-local file was genericized; four `/setup`-seeded placeholder wiki pages were dropped; three stale wiki status lines were bumped to v2.0.0. New `static-analysis` CI job (task 3) gates future PRs against regression: shellcheck, actionlint, pwsh AST parse, lychee link-check on user-facing docs, secret-scan + personal-data regex, LICENSE non-empty check.
+
+### Added
+- **`LICENSE`** at repo root — MIT, Copyright (c) 2026 Alex Herrero. README gained `## License` section.
+- **`static-analysis` CI job** in `.github/workflows/ci-tests.yml` — parallel to mac/ubuntu/windows-test on ubuntu-latest. Six steps; ~12 sec runtime; the named gate every remaining task in `feat-curl-bash-installer` references. End-to-end CI green on [run 25150482876](https://github.com/alexherrero/dev-machine-setup/actions/runs/25150482876).
+
 ## [v2.0.0] — 2026-04-29
 
 > **Windows is now real.** `feat-windows-cli-support` is complete with `passes: true` in `.harness/features.json`. All three features (Mac, Debian/Ubuntu, Windows) are CI-verified end-to-end on a single dispatch — [run 25142962483](https://github.com/alexherrero/dev-machine-setup/actions/runs/25142962483). Major bump: Windows users on v1.x hit the stub-only path (printed TODO + exited 0); on v2.0.0 they hit the real installer that actually does work. No API surface changed, but user expectations did.
