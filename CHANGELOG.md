@@ -4,6 +4,38 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.0.0] — 2026-04-29
+
+> **Windows is now real.** `feat-windows-cli-support` is complete with `passes: true` in `.harness/features.json`. All three features (Mac, Debian/Ubuntu, Windows) are CI-verified end-to-end on a single dispatch — [run 25142962483](https://github.com/alexherrero/dev-machine-setup/actions/runs/25142962483). Major bump: Windows users on v1.x hit the stub-only path (printed TODO + exited 0); on v2.0.0 they hit the real installer that actually does work. No API surface changed, but user expectations did.
+
+### Added
+- **`scripts/install-tooling.ps1`** — winget toolchain installer. Git for Windows (required by Claude Code — shells out to Git Bash), Node LTS, gh, ripgrep. Idempotent skip-if-on-PATH; PATH refresh from registry into running shell. Shipped at v1.1.0; finalized here.
+- **Real `scripts/install-clis.ps1`** — Claude Code via `winget install Anthropic.ClaudeCode`; Gemini via `npm install -g @google/gemini-cli`; Codex skip-with-warn (cites `openai/codex#18648` and `#11744` — npm package broken on Windows). `Update-PathFromRegistry`, `Add-DirToUserPath`, `Test-NodeVersion` helpers. Hard-fails if Node < 20.
+- **Real `scripts/install-gui-apps.ps1`** — winget Antigravity Desktop + Claude Desktop. Single `Install-WingetApp` helper with `NO_APPLICATIONS_FOUND` skip-with-manual-URL-fallback. Gemini Desktop explicitly skipped (no first-party Windows app).
+- **Real `scripts/link-configs.ps1`** — symlink-with-copy-fallback for `CLAUDE.md` (handles `UnauthorizedAccessException` when Dev Mode is off). Copy-if-absent for JSON configs at Windows-native paths. Co-Authored-By kill-switch merge via `ConvertFrom-Json` / `ConvertTo-Json` roundtrip. Explicit skip with rationale for the MSIX-redirected Claude Desktop config (`claude-code#26073`).
+- **Real `scripts/verify-install.ps1`** — two-tier health check (global + harness). Eight approved-verb helpers including `Test-WindowsApp` (registry uninstall-key search across HKLM + HKLM\WOW6432Node + HKCU). Codex skip-only regardless of `WITH_CODEX`; `SKIP_APPS=1` consolidates GUI checks.
+- **Real `scripts/auth-checklist.ps1`** — five numbered items on Windows (claude, gh, gemini, Antigravity, Claude Desktop); Codex note appended with `WITH_CODEX`-aware messaging.
+- **`-WithCodex` flag** on `setup.ps1`. Mirrors `setup.sh`'s `--with-codex`. Sets `$env:WITH_CODEX=1` for sub-stages. (Note: Codex is currently skip-with-warn on Windows even with the flag set.)
+
+### Changed
+- **`setup.ps1`** stage list: `brew` → `tooling` (script `install-tooling.ps1`). `-SkipApps` now also exports `$env:SKIP_APPS=1` for sub-stages (matches `setup.sh`'s `export SKIP_APPS`). PATH refreshed from the registry between every stage so child processes see what prior stages installed via winget.
+- **`.github/workflows/ci-tests.yml`** windows-test job upgraded from **smoke-only** (orchestrator + AST parse, ~25 sec) to **full install pipeline** (~6 min) parallel to the Mac/Ubuntu jobs: `-Help` smoke + grep, `-DryRun`, end-to-end `-SkipApps`, verify-install 0-warn assertion (with `SKIP_APPS=1` env explicit), idempotency `git status` check, `-SkipApps -WithCodex` exits 0 + asserts `codex` is **NOT** on PATH (Windows skip-with-warn invariant), AST-parse-all-.ps1 preserved.
+- **`docs/windows.md`** rewritten end-to-end. Drops the "deferred / TODO stubs" framing. New content: quick-start, supported-version table, Codex-not-supported section, winget-vs-native-installer trade-off, Developer-Mode toggle instructions, MSIX-mess rationale.
+- **`README.md`** Status section: Windows flipped from "deferred" to "ready (full GUI + CLI, mirrors Mac scope)". Testing section drops the smoke framing.
+
+### Fixed
+- **`Write-Host` capture failure** in CI assertions. Both `setup.ps1 -Help` and `verify-install.ps1` use `Write-Host` exclusively, which writes to the Information stream (#6) and bypasses the success pipeline. Variable assignments captured nothing → assertions falsely fired. Fix: `6>&1` redirect.
+- **`"$Desc:"` parser error** in `scripts/verify-install.ps1`. PowerShell parsed `$Desc:` as a scoped-variable reference (`:` is the scope separator). Fix: `${Desc}:` to delimit explicitly.
+- **PATH propagation across setup.ps1 stages.** winget installs registered in user PATH (registry), but child stage processes inherited setup.ps1's stale `$env:Path` (captured at orchestrator start). Fix: refresh PATH from registry inside setup.ps1's per-stage loop.
+- **PATH propagation across CI steps.** Fresh GH Actions step shells inherit the runner agent's PATH (captured at service start, before our installs). Fix: refresh PATH at the top of the verify-install step.
+- **Untracked `verify.out`** caused idempotency drift in CI. The Windows job's `Tee-Object -FilePath verify.out` wrote into the repo working dir; the next step's `git status --porcelain` saw it as untracked. Fix: tee to `$env:RUNNER_TEMP` (matches Mac/Linux's `/tmp`).
+
+### Closed out
+- `feat-windows-cli-support.passes` → `true`.
+- All three features now pass; the project's stated cross-platform contract is fully realized.
+
+**Full diff:** https://github.com/alexherrero/dev-machine-setup/compare/v1.1.0...v2.0.0
+
 ## [v1.1.0] — 2026-04-29
 
 > ⚠️ **Mid-feature release.** Tasks 1–6 of 9 done for `feat-windows-cli-support`. Mac and Debian paths are unchanged and stable. The six Windows `.ps1` scripts are now real implementations (no longer stubs), but `setup.ps1` still wires up to the *old* stub names (`install-brew.ps1` etc.) — task 7 renames the stages to point at the new files. Until then the new scripts exist on disk but aren't reachable via `setup.ps1`. **Stay on v1.0.0 if you're using Windows now**; this tag is incremental tagging hygiene only. v2.0.0 ships when CI's windows-test goes green end-to-end (real install pipeline, task 8) and `feat-windows-cli-support.passes=true` lands (task 9).
@@ -155,6 +187,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - Initial project scaffold: bootstrapped with [agentic-harness](https://github.com/alexherrero/agentic-harness) v0.8.7 + hooks. Includes adapters for Claude Code, Antigravity, Codex, and Gemini plus `PostToolUse` / `PreCompact` / `SessionStart(compact)` hooks.
 
+[v2.0.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v2.0.0
 [v1.1.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v1.1.0
 [v1.0.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v1.0.0
 [v0.6.1]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v0.6.1
