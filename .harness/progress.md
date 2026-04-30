@@ -175,3 +175,8 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - New steps: end-to-end -SkipApps, verify-install 0-warn assertion (with SKIP_APPS=1 env), idempotency git-status check, -WithCodex exits 0 + codex-NOT-on-PATH invariant, AST-parse preserved.
 - Job timeout bumped 10m → 30m to match Mac install budget. Job name: "Windows smoke" → "Windows".
 - actionlint clean. Empirical verification on next CI dispatch.
+
+## /work — feat-windows-cli-support task 8 — 2026-04-29 (CI green)
+- ci-tests.yml windows-test: smoke → real install pipeline.
+- Five CI iterations to land green: Write-Host capture, $Desc: parse error, two PATH-from-registry refresh sites (setup.ps1 stage loop + verify-install step), verify.out drift fix.
+- Run 25142962483: all three jobs green simultaneously.
