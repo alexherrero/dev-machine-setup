@@ -115,7 +115,7 @@ A user on a fresh Mac, Debian, or Windows host installs the full dev environment
   - `wiki/explanation/*` — reframe internal-monologue entries as design rationale.
   - `wiki/reference/*` — keep tabular reference; expand if Stage list etc. moved here from README.
   - `docs/first-run.md`, `docs/debian.md`, `docs/windows.md` — already largely public-ready; spot-check for "I" / personal tone.
-- **Verification:** **CI:** `static-analysis` job's `lychee` step covers wiki/ + docs/ link integrity. Personal-data scan from task 1 also catches lingering personal references.
+- **Verification:** **CI:** `static-analysis` job's `lychee` step covers `docs/` link integrity (`wiki/` is excluded — it uses GitHub-Wiki shortlinks that lychee's filesystem checker can't resolve; broken wiki links surface visually at GitHub-Wiki publish time). The `audit` step's personal-data + secret-shape regex scans both `wiki/` and `docs/` and catches lingering references. The `readme-shape` step (added in task 7) catches accidental section-rename in README. Manual review per page is the gate for prose / status-line correctness.
 - **Status:** [ ]
 
 ### 9. Bootstrap-from-curl end-to-end CI + features.json
