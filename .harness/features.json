@@ -59,20 +59,20 @@
     },
     {
       "id": "feat-curl-bash-installer",
-      "description": "Public release with one-line curl|bash / irm|iex installer. Flips repo to public, ships install.sh + install.ps1 bootstrap that fetches the latest release tarball from GitHub (no git prereq), rewrites README in compact public-facing style (centered title, badges, install-first lead, table-heavy à la TsekNet/converge), polishes wiki/docs for public consumption, and moves every verification gate into a new static-analysis CI job. MIT LICENSE added. Ships as v3.0.0.",
+      "description": "Public release with one-line curl|bash / irm|iex installer. Flipped repo to public, shipped install.sh + install.ps1 bootstrap that fetches the latest release tarball from GitHub (no git prereq) via /releases/latest redirect-Location parse (no JSON API rate-limit), rewrote README in compact public-facing style (centered title, badges, install-first lead, table-heavy à la TsekNet/converge), polished wiki/docs for public consumption, and moved every verification gate into a new static-analysis CI job. MIT LICENSE added. End-to-end CI-verified with all four jobs (mac-test, ubuntu-test, windows-test, static-analysis) including bootstrap-from-curl + bootstrap-from-iwr steps green simultaneously on run 25201071711. Ships as v3.0.0.",
       "steps": [
         "Pre-public deep audit (secrets, personal data, wiki, harness, workflows, configs)",
         "Hygiene additions: LICENSE (MIT)",
         "static-analysis CI job: shellcheck + actionlint + pwsh AST + lychee + audit regex + LICENSE check",
         "Visibility flip: gh repo edit --visibility public",
-        "install.sh — POSIX bootstrap (curl/wget → releases-latest API → tarball → setup.sh)",
-        "install.ps1 — Windows bootstrap (Invoke-RestMethod → zip → Expand-Archive → setup.ps1)",
-        "README rewrite in converge style (centered title, badges, Install, Quick start, tables)",
-        "Wiki + docs/ public polish (drop pending-no-impl, fix personal pronouns, fix links)",
+        "install.sh — POSIX bootstrap (curl/wget → /releases/latest redirect Location parse → tarball → setup.sh)",
+        "install.ps1 — Windows bootstrap (Invoke-WebRequest -MaximumRedirection 0 → zip → Expand-Archive → setup.ps1 @PSBoundParameters)",
+        "README rewrite in converge style (centered title, badges, Install, Quick start, tables) + docs/architecture.md",
+        "Wiki + docs/ public polish (Windows row in design diagram, SSH→HTTPS clones, Windows section in first-run.md)",
         "Bootstrap-from-curl end-to-end CI + features.json passes=true",
         "v3.0.0 release"
       ],
-      "passes": false
+      "passes": true
     }
   ]
 }

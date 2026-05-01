@@ -122,7 +122,7 @@ A user on a fresh Mac, Debian, or Windows host installs the full dev environment
 
 - **What:** Confirm the bootstrap-from-curl steps wired into the matrix jobs in tasks 5+6 are exercised on a fresh dispatch. Add `feat-curl-bash-installer` entry to `.harness/features.json`. After end-to-end CI green, flip `passes: true`.
 - **Verification:** **CI:** single manual dispatch where mac-test / ubuntu-test / windows-test / static-analysis all green simultaneously, with each platform's bootstrap-from-curl step exiting 0.
-- **Status:** [ ]
+- **Status:** [x] (2026-04-30: dispatch on current main HEAD `c50c876` — run 25201071711, all four jobs green simultaneously: Static analysis, macOS, Ubuntu, Windows. All three bootstrap steps confirmed executed and passing — `bootstrap from curl|bash — install.sh --dry-run` on macos-test + ubuntu-test, and `bootstrap from iwr — install.ps1 -DryRun` on windows-test. features.json: feat-curl-bash-installer.passes flipped from false to true; description updated with redirect-Location-parse detail and the run reference. Ready for v3.0.0 in task 10.)
 
 ### 10. Close-out: v3.0.0 release
 
@@ -144,6 +144,7 @@ Every per-task gate is a CI job — see "Verification:" lines above. **Whole-pla
 
 ## Follow-on work (not in this plan)
 
+- **Rename the repo** (post-v3.0.0). New name TBD — current `dev-machine-setup` is generic; a more memorable / brandable name is on the table. Rename via `gh repo rename <new-name>` triggers a permanent redirect from the old name (raw URLs in the curl|bash one-liner keep working until eventually broken by GitHub). Will need to update install.sh / install.ps1 baked-in REPO constant, all README badge URLs, all wiki cross-links to `https://github.com/alexherrero/dev-machine-setup/...`, and CHANGELOG history references. Tracked: GitHub issue (filed at task 9 close-out).
 - **`markdownlint` CI job** — fast-follow after v1 if prose drift becomes a problem.
 - **Homebrew tap** for `brew install alexherrero/dev-machine-setup`.
 - **Self-update mechanism** so existing installs can pull the latest release without re-running curl|bash.

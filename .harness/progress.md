@@ -259,3 +259,9 @@ Append-only log. Newest entries at the bottom. Format: `<YYYY-MM-DD HH:MM> /<pha
 - 2 CI dispatches both green (run 25200691273 + post-debian/windows fixes).
 - Documenter caught 4 real misses in docs/debian.md + docs/windows.md — resolved in scope.
 - Next: /work task 9 (bootstrap-from-curl end-to-end CI + features.json).
+
+## /work — feat-curl-bash-installer task 9 — 2026-05-01T03:43:45Z (passes flipped)
+- CI dispatch on c50c876: run 25201071711, all 4 jobs green simultaneously incl. bootstrap-from-curl + bootstrap-from-iwr steps.
+- features.json: feat-curl-bash-installer.passes false → true. Description refreshed with redirect-Location detail and run reference.
+- Deferred (post-v3.0.0): rename the repo. Added to PLAN.md follow-on work; GitHub Issue filed at end of session.
+- Next: /work task 10 (v3.0.0 release).
