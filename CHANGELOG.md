@@ -4,14 +4,45 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v3.0.0] — 2026-04-30
 
-### Changed
-- **Repository visibility flipped to public** (`feat-curl-bash-installer` task 4). Six-track pre-public audit (task 1) found 0 secrets in tree or git history, 0 API-key-shaped patterns; one hardcoded `/Users/alex/` path in the gitignored project-local file was genericized; four `/setup`-seeded placeholder wiki pages were dropped; three stale wiki status lines were bumped to v2.0.0. New `static-analysis` CI job (task 3) gates future PRs against regression: shellcheck, actionlint, pwsh AST parse, lychee link-check on user-facing docs, secret-scan + personal-data regex, LICENSE non-empty check.
+> **Public release with one-line install.** The repo is now public; a fresh Mac, Debian/Ubuntu host, or Windows machine bootstraps to a fully configured AI-coding dev environment with one command — no `git` prereq, no SSH key, no clone. `feat-curl-bash-installer` complete with `passes: true` in `.harness/features.json`; all five features in the registry now CI-verified end-to-end on dispatch [run 25201071711](https://github.com/alexherrero/dev-machine-setup/actions/runs/25201071711). Major bump: install model is a meaningful break in user expectations. The `git clone` flow keeps working — old tags are untouched.
 
 ### Added
+
+- **`install.sh`** at repo root — POSIX bootstrap. `curl -fsSL https://raw.githubusercontent.com/alexherrero/dev-machine-setup/main/install.sh | bash`. Detects curl (preferred) or wget (fallback); resolves the latest release tag from the `/releases/latest` HTML redirect Location header (no JSON Releases API rate-limit — same pattern as `install-apt.sh`'s shfmt fallback); downloads source tarball to `mktemp -d`; exec's `setup.sh "$@"` forwarding all args. `set -euo pipefail`; clear error message on any failure. Args forward via `bash -s -- --with-codex` etc.
+- **`install.ps1`** at repo root — Windows bootstrap. `iwr -UseBasicParsing https://raw.githubusercontent.com/alexherrero/dev-machine-setup/main/install.ps1 | iex` (default install) or temp-file pattern with named flags. Same redirect-Location parse via try/catch on `Invoke-WebRequest -MaximumRedirection 0`; downloads `.zip`, `Expand-Archive` to `$env:TEMP`, exec's `setup.ps1 @PSBoundParameters`. PowerShell 7+ recommended. The temp-file pattern is the only form that lets PowerShell bind named parameters correctly — documented inline in the script's `.EXAMPLE` blocks.
 - **`LICENSE`** at repo root — MIT, Copyright (c) 2026 Alex Herrero. README gained `## License` section.
-- **`static-analysis` CI job** in `.github/workflows/ci-tests.yml` — parallel to mac/ubuntu/windows-test on ubuntu-latest. Six steps; ~12 sec runtime; the named gate every remaining task in `feat-curl-bash-installer` references. End-to-end CI green on [run 25150482876](https://github.com/alexherrero/dev-machine-setup/actions/runs/25150482876).
+- **`static-analysis` CI job** in `.github/workflows/ci-tests.yml` — parallel to mac/ubuntu/windows-test on ubuntu-latest. Six steps: `shellcheck`, `actionlint`, pwsh AST parse, `lychee` link check on user-facing docs, secret-shape + personal-data regex audit, LICENSE non-empty check. ~12 sec runtime. The named gate every other task in `feat-curl-bash-installer` references. First end-to-end green on [run 25150482876](https://github.com/alexherrero/dev-machine-setup/actions/runs/25150482876).
+- **`readme-shape` CI step** inside `static-analysis` — 10 grep checks for required README sections (centered title, badge block, `## Install`, `## Quick start`, `## Documentation`, `## License`) and the curl|bash + irm|iex one-liner forms. Catches accidental section-rename / badge-removal in PRs.
+- **Bootstrap-from-curl CI steps** in mac/ubuntu/windows-test jobs — exercise the full curl|bash / iwr|iex path on every dispatch. Couples `install.sh@main` / `install.ps1@main` to the latest release's `setup.sh` / `setup.ps1` until the next tag ships.
+- **`docs/architecture.md`** — repo layout ASCII tree (with `install.sh` / `install.ps1` / `setup.ps1` rows added), OS-dispatch architecture diagram including a Windows row, "Why this shape" rationale, agentic-harness `Development` pointer. Cut from `README.md` to keep it install-first.
+- **Windows section in `docs/first-run.md`** — 5 numbered auth steps mirroring Mac (`claude login`, `gh auth login`, `gemini` first-run, Open Antigravity from Start menu, Open Claude Desktop from Start menu) plus a Codex-on-Windows skip-with-warn note linking to `docs/windows.md`. "What setup leaves behind" section rewritten cross-platform.
+- **`wiki/explanation/Public-Curl-Bash-Installer.md`** — design rationale for the bootstrap layer: why public, the redirect-Location-vs-API decision, trust model, trade-offs (no version pin, no Homebrew tap, MIT-over-Apache, etc.).
+- **`wiki/how-to/Install-Via-One-Liner.md`** — task-level recipe with per-platform one-liners, flag-forwarding examples (`--with-codex`, `-WithCodex`), and an `inspect-before-run` security-conscious form.
+- **`wiki/reference/Scripts.md`** — entry-point table for `install.sh` / `install.ps1` / `setup.sh` / `setup.ps1` with flags, exit codes, files written.
+
+### Changed
+
+- **Repository visibility flipped to public** (`feat-curl-bash-installer` task 4). Six-track pre-public audit (task 1) found 0 secrets in tree or git history, 0 API-key-shaped patterns; one hardcoded `/Users/alex/` path in the gitignored project-local file was genericized; four `/setup`-seeded placeholder wiki pages dropped (`First-Explanation.md`, `First-How-To.md`, `First-Reference.md`, `01-Getting-Started.md`); three stale wiki status lines bumped to v2.0.0.
+- **`README.md` rewritten end-to-end** in compact, install-first style à la [TsekNet/converge](https://github.com/TsekNet/converge/blob/main/README.md). Centered title + badge block (CI tests, License: MIT, Latest release); `## Install` leads with curl|bash + irm|iex one-liners (alternative `git clone` form below); `## Quick start` numbered 3 steps; `What gets installed` / `Stages` / `Flags` / `Documentation` / `Testing` tables. The previous prose Layout tree and agentic-harness `Development` paragraph moved to `docs/architecture.md`.
+- **`wiki/explanation/Dev-Machine-Setup-Design.md`** — Shape diagram now has a Windows row (was "Windows: deferred"); Component table refactored to Mac | Debian/Ubuntu | Windows columns with a new Bootstrap row referencing `install.sh` / `install.ps1`; stale `xcode` stage reference removed; Trade-offs expanded with Windows .ps1 sibling-script rationale and the bootstrap-pulls-tagged-release decision.
+- **`wiki/how-to/Bootstrap-A-New-Mac.md`** + **`Bootstrap-A-New-Debian-Or-Ubuntu.md`** — SSH `git clone` switched to HTTPS (works now the repo is public); `xcode` reference dropped; curl|bash one-liner mentioned as the recommended fresh-host path; Related sections added.
+- **`docs/debian.md`** — SSH→HTTPS clone; dropped the post-history "CI verification (scheduled — feat-ci-verification plan in flight)" Future-work bullet (CI is green at v2.0.0); `windows.md` Reference label updated from "Windows deferral note" to "Windows specifics"; curl|bash mention added.
+- **`docs/windows.md`** — SSH→HTTPS clone; curl|bash one-liner mention added pointing at the README.
+- **`wiki/Home.md`** + **`wiki/_Sidebar.md`** — added Reference section (Scripts), `Install-Via-One-Liner` under How-to, `Public-Curl-Bash-Installer` under Explanation.
+
+### Fixed
+
+- **`install.sh` API rate-limit on `macos-latest`** — first CI dispatch of task 5 hit HTTP 403 from the unauthenticated GitHub Releases API (60/hr per IP, shared across the runner pool). Switched to the `/releases/latest` HTML redirect Location header — no rate limit, same pattern as the shfmt fallback in `install-apt.sh` and Anthropic's `claude.ai/install.sh`. `install.ps1` pre-applied this lesson on first write.
+- **`static-analysis` self-match on regex literals** — task-3 first dispatch tripped on its own audit step's regex strings being grep-matched in the workflow YAML. Excluded `.github/workflows/` from secret-shape + personal-data scans (workflow YAML is independently linted by `actionlint` and reviewed for hardcoded keys); excluded `.harness/PLAN.md` / `progress.md` / `CHANGELOG.md` from the path scan since those legitimately reference the historical leak in narrative form.
+- **`lychee` scope** — first dispatch returned 39 broken-link errors across vendored adapter dirs (`.agent/`, `.agents/`, `.codex/`, `.gemini/`), `wiki/` GitHub-Wiki shortlinks (resolve at publish time, not via filesystem), and `AGENTS.md` / `CLAUDE.md` upstream-pointing harness/ refs. Narrowed scope to the genuinely user-facing docs (`README.md`, `CHANGELOG.md`, `docs/`).
+
+### Internal
+
+- **CI lint scope refined** — vendored `.harness/` excluded from shellcheck / pwsh AST / lychee (upstream agentic-harness's responsibility; SC2034 in `.harness/scripts/telemetry.sh` is upstream's). All non-vendored `*.sh` (10 files) and `*.ps1` (7 files) pass cleanly.
+- **`.claude/settings.local.json` pruned** from 27 entries to 4. Per-file `shellcheck` / `setup.sh --flag` / `verify.sh` patterns absorbed into the global allowlist's broader `Bash(shellcheck:*)` / `Bash(./setup.sh:*)` etc. The hardcoded `/Users/alex/` in the surviving `Read(...)` rule was genericized to `/Users/*/` + `/home/*/` globs.
+- **Plan-tracking** — `feat-curl-bash-installer` plan written to `.harness/PLAN.md`; 10 tasks all `[x]`. Progress recorded to `.harness/progress.md` per task. Documenter sub-agent dispatched at each task close-out; flipped 3 wiki pages from `pending → implemented` (after task 6) and caught real misses in `docs/debian.md` / `docs/windows.md` during task 8.
 
 ## [v2.0.0] — 2026-04-29
 
@@ -196,6 +227,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - Initial project scaffold: bootstrapped with [agentic-harness](https://github.com/alexherrero/agentic-harness) v0.8.7 + hooks. Includes adapters for Claude Code, Antigravity, Codex, and Gemini plus `PostToolUse` / `PreCompact` / `SessionStart(compact)` hooks.
 
+[v3.0.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v3.0.0
 [v2.0.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v2.0.0
 [v1.1.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v1.1.0
 [v1.0.0]: https://github.com/alexherrero/dev-machine-setup/releases/tag/v1.0.0
