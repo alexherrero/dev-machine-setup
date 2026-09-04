@@ -28,6 +28,22 @@ The stop-gate on a push is **recoverability, not destructiveness or blast-radius
 
 When in doubt about a **routine** push, push — the operator can always reset or force-push back, and forcing them to micromanage routine pushes is the bigger cost. When uncertain whether a **destructive** push is recoverable, treat it as unrecoverable (the conservative default the doctrine names). Applies to every repo on this device.
 
+## Refreshing a stale branch — rebase, never back-merge
+
+**In a squash-merge repo, never merge `main` backwards into a branch. Rebase.** Applies to every repo on this device that squash-merges — today `agentm` and `crickets`, whose `main` protection sets `required_status_checks.strict = true` (a branch **must** be up to date before it can merge) and `required_linear_history` (merge commits are barred from `main` outright).
+
+**Why it is not a style preference.** A squashed commit on `main` carries no ancestry link to the branch commits it was built from. Git therefore cannot tell that the squashed commit already contains work the branch has since reverted, and merging `main` backwards re-adds that work **with no conflict and no signal**. The revert is correct; git simply cannot see that the two touched the same change.
+
+**The trap is the default.** `gh pr update-branch` merges the base branch into the PR branch unless told otherwise — its own help text says so. Because `strict` makes the refresh mandatory whenever `main` moves under an open PR, the dangerous command runs by policy rather than by mistake.
+
+- **Refresh with** `gh pr update-branch --rebase <N>`, or `git fetch origin && git rebase origin/main`.
+- **Force-pushing your own un-shared branch afterwards is recoverable** → announce + proceed, per the doctrine above.
+- **Squash stays.** It gives one commit per plan on `main`, and merge commits are blocked by branch protection anyway.
+
+Automated in crickets `development-lifecycle` v0.44.1 ([#230](https://github.com/alexherrero/crickets/pull/230)) — `shepherd_stalled_prs` now passes `--rebase`, with a regression test pinning the flag. **Installed plugin copies are separate from the repo**, so that fix is only live once the plugin is updated on this machine; until then the rule above is the operator's to hold by hand.
+
+**A related consequence, unchanged by that fix:** commit-identity tests still lie about whether a branch has *landed* (`git merge-base --is-ancestor`, subject matching, `merge-tree`). When deciding whether a stale branch is safe to delete, file-level presence on `main` is the only reliable test.
+
 ## Merging from a worktree — arm auto-merge, never `--delete-branch`
 
 **Never pass `--delete-branch` (`-d`) to `gh pr merge` from inside a worktree.** Applies to every repo on this device that uses worktrees — today `agentm` and `crickets`.
