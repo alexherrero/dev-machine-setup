@@ -28,6 +28,22 @@ The stop-gate on a push is **recoverability, not destructiveness or blast-radius
 
 When in doubt about a **routine** push, push — the operator can always reset or force-push back, and forcing them to micromanage routine pushes is the bigger cost. When uncertain whether a **destructive** push is recoverable, treat it as unrecoverable (the conservative default the doctrine names). Applies to every repo on this device.
 
+## Merging from a worktree — arm auto-merge, never `--delete-branch`
+
+**Never pass `--delete-branch` (`-d`) to `gh pr merge` from inside a worktree.** Applies to every repo on this device that uses worktrees — today `agentm` and `crickets`.
+
+**What it does.** To delete the *local* branch, `gh` first has to leave it — so it runs `git checkout main && git pull --ff-only` **in the worktree you are standing in**, then deletes the branch you were on. The worktree now holds `refs/heads/main`; its feature branch is gone; the session that spawned it is on `main` without having chosen to be. Seen twice on 2026-09-04 alone, in two different sessions.
+
+**The trap is the default.** `-d` is the obvious flag, and nothing in the flow needs it: both repos set `delete_branch_on_merge`, so GitHub deletes the remote branch itself the moment a PR merges. The only thing `-d` adds is the local `checkout main` — the harmful part.
+
+- **Default: arm auto-merge at open time and walk away** — `gh pr merge --auto --squash <N>` right after `gh pr create`. GitHub merges on green, deletes the remote branch, touches nothing local. This is what `/work` already does, and it is what "auto-merge on green" in the chip-session doctrine below means.
+- **A hand merge, when one is actually wanted now:** `gh pr merge --squash <N>`, no `-d`. The worktree and its local branch are cleaned up by worktree teardown, not by the merge.
+- **If a worktree is already stranded on `main`:** `git -C <worktree> checkout --detach` frees the ref and loses nothing — the working tree stays put; the slot can then be removed normally.
+
+Detected in crickets `development-lifecycle` v0.46.0 ([#235](https://github.com/alexherrero/crickets/pull/235)) — `doctor_worktrees.py` reports a linked worktree holding the integration branch as `stranded-on-main`, and `worktree_shepherd.py` detaches a clean one. **Installed plugin copies are separate from the repo**, so the detector is only live once the plugin is updated on this machine; until then the rule above is the operator's to hold by hand.
+
+**Why the primary clone does not stop this.** `~/Antigravity/agentm` is deliberately kept detached at `origin/main` — release commits are made there detached and pushed `HEAD:main` — so local `main` is never held anywhere and is always free for a worktree to take. That is fine: a stolen ref never blocks the primary. It just means the guard has to be the rule above, not a failing checkout.
+
 ## Background-task chip sessions
 
 A session spun off from a `spawn_task` chip (Claude Code Desktop's background-task feature) carries the same authority as an explicit operator command for the task it names — clicking the chip **is** the "yes, do this" the generic ask-before-every-commit default requires. In any harness-installed repo (signal: `.harness/PLAN.md` or `.harness/ROADMAP.md` present — today `agentm` + `crickets`), a chip-spawned session runs its task to completion under the same recoverable → proceed doctrine as `/work` / `/release` (see Push and confirmation, above): commit, push, open a PR, and — where the worktree-native carve-out already applies (agentm + crickets) — auto-merge on green required checks, then clean up the worktree/branch. Announce each step; don't wait for conversational confirmation on any of it.
